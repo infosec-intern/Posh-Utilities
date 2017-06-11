@@ -1,7 +1,6 @@
 # Taken From:
 # http://blogs.technet.com/b/heyscriptingguy/archive/2015/03/09/use-powershell-to-create-zip-archive-of-folder.aspx
-Function Invoke-Zip
-{
+Function Invoke-Zip {
 	[CmdletBinding()]
 	Param(
 		[Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
@@ -35,8 +34,7 @@ Function Invoke-Zip
 
 # Taken From:
 # http://blogs.technet.com/b/heyscriptingguy/archive/2015/03/09/use-powershell-to-create-zip-archive-of-folder.aspx
-Function Invoke-Unzip
-{
+Function Invoke-Unzip {
 	[CmdletBinding()]
 	Param(
 		[Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
