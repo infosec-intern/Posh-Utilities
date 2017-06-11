@@ -32,13 +32,20 @@ $Events | ForEach-Object {
     $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
     $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
 
-    If ($ScriptBlockId -ne $CurrentScript) {
-        $CurrentScript = $ScriptBlockId
+    # If "Script" ParameterSetName and a script to search for are set, then only write out that script if it exists
+    If ($PsCmdlet.ParameterSetName -eq "Script" -and $ScriptName) {
+        If ($ScriptName -ne )
     }
-    If ($ScriptPath -eq $null) {
-        # If no scriptpath exists, write it out using the block id
-        $ScriptPath = "$ScriptBlockId.ps1"
+    # If ParameterSetName isn't "Script", then assume it's "List" and write out all scripts
+    Else {
+        If ($ScriptBlockId -ne $CurrentScript) {
+            $CurrentScript = $ScriptBlockId
+        }
+        If ($ScriptPath -eq $null) {
+            # If no scriptpath exists, write it out using the block id
+            $ScriptPath = "$ScriptBlockId.ps1"
+        }
+        Write-Verbose -Message "Writing '$OutFolder\$(Split-Path -Leaf $ScriptPath)' ($MessageNumber/$MessageTotal)"
+        $ScriptBlockText | Out-File -FilePath "$OutFolder\$(Split-Path -Leaf $ScriptPath)" -Append
     }
-    Write-Verbose -Message "Writing '$OutFolder\$(Split-Path -Leaf $ScriptPath)' ($MessageNumber/$MessageTotal)"
-    $ScriptBlockText | Out-File -FilePath "$OutFolder\$(Split-Path -Leaf $ScriptPath)" -Append
 }
