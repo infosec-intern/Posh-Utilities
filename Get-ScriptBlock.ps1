@@ -44,30 +44,48 @@ $Events = Get-WinEvent -MaxEvents 1 -FilterHashtable @{
     "Id"=4104
 }
 
-$CurrentScript = 0
-
-$Events | ForEach-Object {
-    # gathered from https://blogs.technet.microsoft.com/ashleymcglone/2013/08/28/powershell-get-winevent-xml-madness-getting-details-from-event-logs/
-    $EventXML = [xml]$_.ToXML()
-    $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
-    $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
-    $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
-    $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
-    $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
-
-    # If "Script" ParameterSetName and a script to search for are set, then only write out that script if it exists
-    If ($PsCmdlet.ParameterSetName -eq "Script") {
+If ($PSCmdlet.ParameterSetName -eq "List") {
+    $ScriptLastRunList = @()
+    $Events | ForEach-Object {
+        $EventXML = [xml]$_.ToXML()
+        $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
+        If ($ScriptPath -eq $null) { $ScriptPath = $EventXML.Event.EventData.Data[3].'#text' }
+        If (($ScriptPath -ne $null) -and (($ScriptLastRunList).ScriptPath -notcontains $ScriptPath)) {
+                $NewScript = New-Object psobject
+                $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
+                $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
+                Write-Verbose "Adding $ScriptPath to list"
+                $ScriptLastRunList += $NewScript
+        }
     }
-    # If ParameterSetName isn't "Script", then assume it's "List" and write out all scripts
-    Else {
-        If ($ScriptBlockId -ne $CurrentScript) {
-            $CurrentScript = $ScriptBlockId
+    Write-Output $ScriptLastRunList
+}
+Else {
+    $CurrentScript = 0
+
+    $Events | ForEach-Object {
+        # gathered from https://blogs.technet.microsoft.com/ashleymcglone/2013/08/28/powershell-get-winevent-xml-madness-getting-details-from-event-logs/
+        $EventXML = [xml]$_.ToXML()
+        $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
+        $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
+        $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
+        $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
+        $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
+
+        # If "Script" ParameterSetName and a script to search for are set, then only write out that script if it exists
+        If ($PsCmdlet.ParameterSetName -eq "Script") {
         }
-        If ($ScriptPath -eq $null) {
-            # If no scriptpath exists, write it out using the block id
-            $ScriptPath = "$ScriptBlockId.ps1"
+        # If ParameterSetName isn't "Script", then assume it's "List" and write out all scripts
+        Else {
+            If ($ScriptBlockId -ne $CurrentScript) {
+                $CurrentScript = $ScriptBlockId
+            }
+            If ($ScriptPath -eq $null) {
+                # If no scriptpath exists, write it out using the block id
+                $ScriptPath = "$ScriptBlockId.ps1"
+            }
+            Write-Verbose -Message "Writing '$OutFolder\$(Split-Path -Leaf $ScriptPath)' ($MessageNumber/$MessageTotal)"
+            $ScriptBlockText | Out-File -FilePath "$OutFolder\$(Split-Path -Leaf $ScriptPath)" -Append
         }
-        Write-Verbose -Message "Writing '$OutFolder\$(Split-Path -Leaf $ScriptPath)' ($MessageNumber/$MessageTotal)"
-        $ScriptBlockText | Out-File -FilePath "$OutFolder\$(Split-Path -Leaf $ScriptPath)" -Append
     }
 }
