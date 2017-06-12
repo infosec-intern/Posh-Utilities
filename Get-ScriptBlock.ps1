@@ -39,7 +39,7 @@ Param(
     [string]$OutFolder = "$env:USERPROFILE\Desktop"
 )
 
-$Events = Get-WinEvent -MaxEvents 1 -FilterHashtable @{
+$Events = Get-WinEvent -FilterHashtable @{
     "ProviderName"="Microsoft-Windows-PowerShell";
     "Id"=4104
 }
@@ -49,7 +49,7 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
-        If ($ScriptPath -eq $null) { $ScriptPath = $EventXML.Event.EventData.Data[3].'#text' }
+        # If ($ScriptPath -eq $null) { $ScriptPath = $EventXML.Event.EventData.Data[3].'#text' }
         If (($ScriptPath -ne $null) -and (($ScriptLastRunList).ScriptPath -notcontains $ScriptPath)) {
                 $NewScript = New-Object psobject
                 $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
