@@ -1,9 +1,12 @@
 <#
 .SYNOPSIS
-
+    Extract scriptblocks held in the PowerShell Applications and Services event log
 .DESCRIPTION
+    Extract scriptblocks held in the PowerShell Applications and Services event log.
+    This includes everythibg from listing the filepaths and their last run time to dumping out the contents of all scripts
+    contained within the event log. It also isn't just limited to the local computer. Remote scriptblocks can be extracted as well
 .PARAMETER ComputerName
-    Remote computer to search event logs on. Default is the local machine
+    Remote computer to search event logs on. Default is the local computer
 .PARAMETER Credential
     PSCredential object to authenticate to a remote computer with
 .PARAMETER List
