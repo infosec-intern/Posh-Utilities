@@ -18,6 +18,9 @@
 .PARAMETER OutFolder
     Particular folder to save scripts to. Default is the current one
 .EXAMPLE
+.LINK
+    https://github.com/infosec-intern/Posh-Utilities/blob/master/Get-ScriptBlock.ps1
+    https://blogs.technet.microsoft.com/ashleymcglone/2013/08/28/powershell-get-winevent-xml-madness-getting-details-from-event-logs/
 #>
 [CmdletBinding(DefaultParameterSetName="List")]
 
@@ -49,7 +52,6 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
-        # If ($ScriptPath -eq $null) { $ScriptPath = $EventXML.Event.EventData.Data[3].'#text' }
         If (($ScriptPath -ne $null) -and (($ScriptLastRunList).ScriptPath -notcontains $ScriptPath)) {
                 $NewScript = New-Object psobject
                 $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
@@ -60,10 +62,12 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
     }
     Write-Output $ScriptLastRunList
 }
-Else {
+ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
+
+}
+ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
     $CurrentScriptId = 0
     $Events | ForEach-Object {
-        # gathered from https://blogs.technet.microsoft.com/ashleymcglone/2013/08/28/powershell-get-winevent-xml-madness-getting-details-from-event-logs/
         $EventXML = [xml]$_.ToXML()
         $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
         $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
@@ -71,20 +75,14 @@ Else {
         $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
 
-        # If "Script" ParameterSetName and a script to search for are set, then only write out that script if it exists
-        If ($PsCmdlet.ParameterSetName -eq "Script") {
+        If ($ScriptBlockId -ne $CurrentScriptId) {
+            $CurrentScriptId = $ScriptBlockId
         }
-        # If ParameterSetName isn't "Script", then assume it's "List" and write out all scripts
-        ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
-            If ($ScriptBlockId -ne $CurrentScriptId) {
-                $CurrentScriptId = $ScriptBlockId
-            }
-            If ($ScriptPath -eq $null) {
-                # If no scriptpath exists, write it out using the block id
-                $ScriptPath = "$ScriptBlockId.ps1"
-            }
-            Write-Verbose -Message "Writing '$OutFolder\$(Split-Path -Leaf $ScriptPath)' ($MessageNumber/$MessageTotal)"
-            $ScriptBlockText | Out-File -FilePath "$OutFolder\$(Split-Path -Leaf $ScriptPath)" -Append
+        If ($ScriptPath -eq $null) {
+            # If no scriptpath exists, write it out using the block id
+            $ScriptPath = "$ScriptBlockId.ps1"
         }
+        Write-Verbose -Message "Writing '$OutFolder\$(Split-Path -Leaf $ScriptPath)' ($MessageNumber/$MessageTotal)"
+        $ScriptBlockText | Out-File -FilePath "$OutFolder\$(Split-Path -Leaf $ScriptPath)" -Append
     }
 }
