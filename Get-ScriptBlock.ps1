@@ -61,8 +61,7 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
     Write-Output $ScriptLastRunList
 }
 Else {
-    $CurrentScript = 0
-
+    $CurrentScriptId = 0
     $Events | ForEach-Object {
         # gathered from https://blogs.technet.microsoft.com/ashleymcglone/2013/08/28/powershell-get-winevent-xml-madness-getting-details-from-event-logs/
         $EventXML = [xml]$_.ToXML()
@@ -76,9 +75,9 @@ Else {
         If ($PsCmdlet.ParameterSetName -eq "Script") {
         }
         # If ParameterSetName isn't "Script", then assume it's "List" and write out all scripts
-        Else {
-            If ($ScriptBlockId -ne $CurrentScript) {
-                $CurrentScript = $ScriptBlockId
+        ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
+            If ($ScriptBlockId -ne $CurrentScriptId) {
+                $CurrentScriptId = $ScriptBlockId
             }
             If ($ScriptPath -eq $null) {
                 # If no scriptpath exists, write it out using the block id
