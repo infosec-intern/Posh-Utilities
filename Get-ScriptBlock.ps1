@@ -63,7 +63,26 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
     Write-Output $ScriptLastRunList
 }
 ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
-
+    $CurrentScriptId = 0
+    $Events | ForEach-Object {
+        $EventXML = [xml]$_.ToXML()
+        $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
+        $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
+        # check if the user's ScriptName input is seen in the path
+        If ($ScriptName -iin $ScriptPath) {
+            $Destination = Join-Path -Path $OutFolder -ChildPath $ScriptName
+            $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
+            If ($CurrentScriptId -eq 0) {
+                # Set the CurrentScriptId and only allow it to be modified this one time
+                Set-Variable -Name $CurrentScriptId -Value $EventXML.Event.EventData.Data[3].'#text' -Option ReadOnly
+                Write-Output "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
+                Write-Output $ScriptBlockText | Out-File -FilePath $Destination -Append
+            }
+            ElseIf ($CurrentScriptId -eq $ScriptBlockId) {
+                Write-Output $ScriptBlockText | Out-File -FilePath $Destination -Append
+            }
+        }
+    }
 }
 ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
     $CurrentScriptId = 0
@@ -74,7 +93,6 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
         $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
         $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
-
         If ($ScriptBlockId -ne $CurrentScriptId) {
             $CurrentScriptId = $ScriptBlockId
         }
@@ -82,7 +100,9 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
             # If no scriptpath exists, write it out using the block id
             $ScriptPath = "$ScriptBlockId.ps1"
         }
-        Write-Verbose -Message "Writing '$OutFolder\$(Split-Path -Leaf $ScriptPath)' ($MessageNumber/$MessageTotal)"
-        $ScriptBlockText | Out-File -FilePath "$OutFolder\$(Split-Path -Leaf $ScriptPath)" -Append
+        $Destination = Join-Path -Path $OutFolder -ChildPath $(Split-Path -Leaf $ScriptPath)
+        Write-Output "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
+        Write-Verbose -Message "Writing '$Destination' ($MessageNumber/$MessageTotal)"
+        Write-Output $ScriptBlockText | Out-File -FilePath $Destination -Append
     }
 }
