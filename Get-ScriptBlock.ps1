@@ -53,11 +53,11 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
         $EventXML = [xml]$_.ToXML()
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
         If (($ScriptPath -ne $null) -and (($ScriptLastRunList).ScriptPath -notcontains $ScriptPath)) {
-                $NewScript = New-Object psobject
-                $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
-                $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
-                Write-Verbose "Adding $ScriptPath to list"
-                $ScriptLastRunList += $NewScript
+            $NewScript = New-Object psobject
+            $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
+            $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
+            Write-Verbose "Adding $ScriptPath to list"
+            $ScriptLastRunList += $NewScript
         }
     }
     Write-Output $ScriptLastRunList
