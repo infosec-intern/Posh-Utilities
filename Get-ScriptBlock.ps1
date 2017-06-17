@@ -26,7 +26,7 @@
 
 Param(
     [Parameter()]
-    [string]$ComputerName = ".",
+    [string]$ComputerName = "$env:COMPUTERNAME",
     [Parameter()]
     [PSCredential]$Credential,
     [Parameter(ParameterSetName="List")]
@@ -42,7 +42,7 @@ Param(
     [string]$OutFolder = "$env:USERPROFILE\Desktop"
 )
 
-$Events = Get-WinEvent -FilterHashtable @{
+$Events = Get-WinEvent -ComputerName $ComputerName -FilterHashtable @{
     "ProviderName"="Microsoft-Windows-PowerShell";
     "Id"=4104
 }
