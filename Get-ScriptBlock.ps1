@@ -49,9 +49,17 @@ Param(
     [string]$OutFolder = "$env:USERPROFILE\Desktop"
 )
 
-$Events = Get-WinEvent -ComputerName $ComputerName -FilterHashtable @{
-    "ProviderName"="Microsoft-Windows-PowerShell";
-    "Id"=4104
+If ($Credential) {
+    $Events = Get-WinEvent -ComputerName $ComputerName -Credential $Credential -FilterHashtable @{
+        "ProviderName"="Microsoft-Windows-PowerShell";
+        "Id"=4104
+    }
+}
+Else {
+    $Events = Get-WinEvent -ComputerName $ComputerName -FilterHashtable @{
+        "ProviderName"="Microsoft-Windows-PowerShell";
+        "Id"=4104
+    }
 }
 
 If ($PSCmdlet.ParameterSetName -eq "List") {
