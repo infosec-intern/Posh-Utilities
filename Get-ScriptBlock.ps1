@@ -63,23 +63,29 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
     Write-Output $ScriptLastRunList
 }
 ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
-    $CurrentScriptId = 0
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
+        $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
+        $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
         $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
+        $Destination = Join-Path -Path $OutFolder -ChildPath $ScriptName
+        # if the destination file already exists, don't write it out
+        If (Test-Path -Path $Destination) {
+            Write-Verbose -Message "'$Destination' already exists. Skipping ($MessageNumber/$MessageTotal)"
+            continue
+        }
         # check if the user's ScriptName input is seen in the path
         If ($ScriptName -iin $ScriptPath) {
-            $Destination = Join-Path -Path $OutFolder -ChildPath $ScriptName
+            Write-Verbose -Message "Writing '$Destination' ($MessageNumber/$MessageTotal)"
             $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
-            If ($CurrentScriptId -eq 0) {
-                # Set the CurrentScriptId and only allow it to be modified this one time
-                Set-Variable -Name $CurrentScriptId -Value $EventXML.Event.EventData.Data[3].'#text' -Option ReadOnly
-                Write-Output "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
-                Write-Output $ScriptBlockText | Out-File -FilePath $Destination -Append
+            If ($MessageNumber -eq 1) {
+                Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
+                Write-Output -InputObject "# ScriptBlockId: $ScriptBlockId" | Out-File -FilePath $Destination -Append
+                Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
             }
-            ElseIf ($CurrentScriptId -eq $ScriptBlockId) {
-                Write-Output $ScriptBlockText | Out-File -FilePath $Destination -Append
+            Else {
+                Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
             }
         }
     }
