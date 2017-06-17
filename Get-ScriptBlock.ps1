@@ -85,9 +85,6 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
     $TempScriptBlockText = ""
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
-        $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
-        $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
-        $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
         If ($ScriptPath -eq $null) {
             # ScriptName requires a value in ScriptPath, so we know these can be skipped
@@ -96,7 +93,10 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
         # check if the user's ScriptName input is seen in the path
         If ([string]$ScriptPath.Contains($ScriptName)) {
             $Destination = Join-Path -Path $OutFolder -ChildPath $(Split-Path -Leaf $ScriptPath)
+            $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
+            $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
             $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
+            $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
             $ScriptBlockText += $TempScriptBlockText
             If ($MessageNumber -eq 1) {
                 Write-Verbose -Message "Writing '$Destination': $MessageTotal sections total"
@@ -115,7 +115,6 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
         $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
-        $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
         $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
         If ($ScriptPath -eq $null) {
@@ -133,6 +132,7 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
         $ScriptBlockText += $TempScriptBlockText
         $TempScriptBlockText = $ScriptBlockText
         If ($MessageNumber -eq 1) {
+            $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
             Write-Verbose -Message "Writing '$Destination': $MessageTotal sections total"
             Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
             Write-Output -InputObject "# ScriptBlockId: $ScriptBlockId" | Out-File -FilePath $Destination -Append
