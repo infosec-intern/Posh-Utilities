@@ -56,7 +56,7 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
             $NewScript = New-Object psobject
             $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
             $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
-            Write-Verbose "Adding $ScriptPath to list"
+            Write-Verbose -Message "Adding $ScriptPath to list"
             $ScriptLastRunList += $NewScript
         }
     }
@@ -107,8 +107,8 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
             $ScriptPath = "$ScriptBlockId.ps1"
         }
         $Destination = Join-Path -Path $OutFolder -ChildPath $(Split-Path -Leaf $ScriptPath)
-        Write-Output "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
+        Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
         Write-Verbose -Message "Writing '$Destination' ($MessageNumber/$MessageTotal)"
-        Write-Output $ScriptBlockText | Out-File -FilePath $Destination -Append
+        Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
     }
 }
