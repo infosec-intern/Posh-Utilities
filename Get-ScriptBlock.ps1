@@ -11,6 +11,9 @@
     PSCredential object to authenticate to a remote computer with
 .PARAMETER List
     Grab the paths of all scripts that have been run and the last time they were run
+.PARAMETER NoName
+    When listing scripts, include those run without a path
+    Warning: This might drastically increase the number returned
 .PARAMETER Dump
     Save the contents of all scripts to a designated folder
 .PARAMETER ScriptName
@@ -31,6 +34,8 @@ Param(
     [PSCredential]$Credential,
     [Parameter(ParameterSetName="List")]
     [switch]$List,
+    [Parameter(ParameterSetName="List")]
+    [switch]$NoName,
     [Parameter(ParameterSetName="Dump")]
     [switch]$Dump,
     [Parameter(ParameterSetName="Script", ValueFromPipeline=$true)]
@@ -53,6 +58,11 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
+        # set the ScriptBlockId as path so the user can correlate it in the event logs if she chooses
+        If ($NoName) {
+            $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
+            $ScriptPath = $ScriptBlockId
+        }
         If (($ScriptPath -ne $null) -and (($ScriptLastRunList).ScriptPath -notcontains $ScriptPath)) {
             $NewScript = New-Object psobject
             $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
