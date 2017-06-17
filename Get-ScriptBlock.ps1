@@ -24,6 +24,7 @@
 .LINK
     https://github.com/infosec-intern/Posh-Utilities/blob/master/Get-ScriptBlock.ps1
     https://blogs.technet.microsoft.com/ashleymcglone/2013/08/28/powershell-get-winevent-xml-madness-getting-details-from-event-logs/
+    https://stackoverflow.com/questions/7760013/why-does-continue-behave-like-break-in-a-foreach-object
 #>
 [CmdletBinding(DefaultParameterSetName="List")]
 
@@ -68,7 +69,7 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
             $NewScript = New-Object psobject
             $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
             $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
-            Write-Debug -Message "Adding $ScriptPath to list"
+            Write-Verbose -Message "Adding $ScriptPath to list"
             $ScriptLastRunList += $NewScript
         }
     }
@@ -85,12 +86,14 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
         $Destination = Join-Path -Path $OutFolder -ChildPath $ScriptName
         # if the destination file already exists, don't write it out
         If (Test-Path -Path $Destination) {
-            Write-Debug -Message "'$Destination' already exists. Skipping ($MessageNumber/$MessageTotal)"
-            continue
+            Write-Verbose -Message "'$Destination' already exists. Skipping ($MessageNumber/$MessageTotal)"
+            # Turns out 'continue' doesn't work on ForEach-Object
+            # Need to 'return' out of the cmdlet process instead
+            return
         }
         # check if the user's ScriptName input is seen in the path
         If ($ScriptName -iin $ScriptPath) {
-            Write-Debug -Message "Writing '$Destination' ($MessageNumber/$MessageTotal)"
+            Write-Verbose -Message "Writing '$Destination' ($MessageNumber/$MessageTotal)"
             $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
             If ($MessageNumber -eq 1) {
                 Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
@@ -112,16 +115,14 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
         $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
         If ($ScriptPath -eq $null) {
-            Write-Verbose -Message "ScriptPath is null"
             If ($NoName) {
-                Write-Debug -Message "ScriptPath is null and NoName is specified. Changing path to $ScriptBlockId"
-                # If no scriptpath exists, write it out using the block id
+                # If no scriptpath exists, write it out using the block id to keep each unique
                 $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
                 $ScriptPath = "$ScriptBlockId.ps1"
             }
             Else {
-                # if ScriptPath is null and -NoName isn't specified, assume the user doesn't want to see this script
-                continue
+                # Assume the user doesn't want to see this null-path scripts by default
+                return
             }
         }
         Write-Verbose -Message "Writing '$Destination' ($MessageNumber/$MessageTotal)"
