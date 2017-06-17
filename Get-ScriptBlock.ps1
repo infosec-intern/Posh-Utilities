@@ -81,6 +81,8 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
 }
 ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
     Write-Verbose -Message "Searching event logs for '$ScriptName'"
+    # Since scriptblock text is written in reverse in event logs, need to store it at once
+    $TempScriptBlockText = ""
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
         $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
@@ -97,31 +99,31 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
         }
         # check if the user's ScriptName input is seen in the path
         If ($ScriptName -iin $ScriptPath) {
-            Write-Verbose -Message "Writing '$Destination' ($MessageNumber/$MessageTotal)"
             $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
+            $ScriptBlockText += $TempScriptBlockText
             If ($MessageNumber -eq 1) {
+                Write-Verbose -Message "Writing '$Destination': $MessageTotal sections total"
                 Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
                 Write-Output -InputObject "# ScriptBlockId: $ScriptBlockId" | Out-File -FilePath $Destination -Append
                 Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
-            }
-            Else {
-                Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
+                $TempScriptBlockText = ""
             }
         }
     }
 }
 ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
     Write-Verbose -Message "Dumping out all unique PowerShell scripts from event logs"
+    # Since scriptblock text is written in reverse in event logs, need to store it at once
+    $TempScriptBlockText = ""
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
         $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
         $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
-        $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
+        $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
         If ($ScriptPath -eq $null) {
             If ($NoName) {
                 # If no scriptpath exists, write it out using the block id to keep each unique
-                $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
                 $ScriptPath = "$ScriptBlockId.ps1"
             }
             Else {
@@ -129,9 +131,15 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
                 return
             }
         }
-        Write-Verbose -Message "Writing '$Destination' ($MessageNumber/$MessageTotal)"
         $Destination = Join-Path -Path $OutFolder -ChildPath $(Split-Path -Leaf $ScriptPath)
-        Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
-        Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
+        $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
+        $ScriptBlockText += $TempScriptBlockText
+        If ($MessageNumber -eq 1) {
+            Write-Verbose -Message "Writing '$Destination': $MessageTotal sections total"
+            Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
+            Write-Output -InputObject "# ScriptBlockId: $ScriptBlockId" | Out-File -FilePath $Destination -Append
+            Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
+            $TempScriptBlockText = ""
+        }
     }
 }
