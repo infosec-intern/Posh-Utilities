@@ -59,11 +59,11 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
         $EventXML = [xml]$_.ToXML()
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
         # set the ScriptBlockId as path so the user can correlate it in the event logs if she chooses
-        If ($NoName) {
+        If (($ScriptPath -eq $null) -and ($NoName)) {
             $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
             $ScriptPath = $ScriptBlockId
         }
-        If (($ScriptPath -ne $null) -and (($ScriptLastRunList).ScriptPath -notcontains $ScriptPath)) {
+        If (($ScriptLastRunList).ScriptPath -notcontains $ScriptPath) {
             $NewScript = New-Object psobject
             $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
             $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
