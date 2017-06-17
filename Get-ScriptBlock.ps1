@@ -124,7 +124,7 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
                 $ScriptPath = "$ScriptBlockId.ps1"
             }
             Else {
-                # Assume the user doesn't want to see this null-path scripts by default
+                # Assume the user doesn't want to see null-path scripts by default
                 return
             }
         }
