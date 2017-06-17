@@ -35,6 +35,7 @@ Param(
     [Parameter(ParameterSetName="List")]
     [switch]$List,
     [Parameter(ParameterSetName="List")]
+    [Parameter(ParameterSetName="Dump")]
     [switch]$NoName,
     [Parameter(ParameterSetName="Dump")]
     [switch]$Dump,
@@ -109,15 +110,23 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
         $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
         $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
         $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
-        $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
         If ($ScriptPath -eq $null) {
-            # If no scriptpath exists, write it out using the block id
-            $ScriptPath = "$ScriptBlockId.ps1"
+            Write-Verbose -Message "ScriptPath is null"
+            If ($NoName) {
+                Write-Debug -Message "ScriptPath is null and NoName is specified. Changing path to $ScriptBlockId"
+                # If no scriptpath exists, write it out using the block id
+                $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
+                $ScriptPath = "$ScriptBlockId.ps1"
+            }
+            Else {
+                # if ScriptPath is null and -NoName isn't specified, assume the user doesn't want to see this script
+                continue
+            }
         }
+        Write-Verbose -Message "Writing '$Destination' ($MessageNumber/$MessageTotal)"
         $Destination = Join-Path -Path $OutFolder -ChildPath $(Split-Path -Leaf $ScriptPath)
         Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
-        Write-Verbose -Message "Writing '$Destination' ($MessageNumber/$MessageTotal)"
         Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
     }
 }
