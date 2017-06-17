@@ -107,9 +107,10 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
             $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
             $ScriptBlockText += $TempScriptBlockText
             If ($MessageNumber -eq 1) {
-                Write-Verbose -Message "Writing '$Destination': $MessageTotal sections total"
+                Write-Verbose -Message "Writing '$Destination'"
                 Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
                 Write-Output -InputObject "# ScriptBlockId: $ScriptBlockId" | Out-File -FilePath $Destination -Append
+                Write-Output -InputObject "# Total Sections: $MessageTotal" | Out-File -FilePath $Destination -Append
                 Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
                 $TempScriptBlockText = ""
             }
