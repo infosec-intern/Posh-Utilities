@@ -90,18 +90,12 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
         $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
         If ($ScriptPath -eq $null) {
-            return
-        }
-        $Destination = Join-Path -Path $OutFolder -ChildPath $(Split-Path -Leaf $ScriptPath)
-        # if the destination file already exists, don't write it out
-        If (Test-Path -Path $Destination) {
-            Write-Verbose -Message "'$Destination' already exists. Skipping ($MessageNumber/$MessageTotal)"
-            # Turns out 'continue' doesn't work on ForEach-Object
-            # Need to 'return' out of the cmdlet process instead
+            # ScriptName requires a value in ScriptPath, so we know these can be skipped
             return
         }
         # check if the user's ScriptName input is seen in the path
         If ([string]$ScriptPath.Contains($ScriptName)) {
+            $Destination = Join-Path -Path $OutFolder -ChildPath $(Split-Path -Leaf $ScriptPath)
             $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
             $ScriptBlockText += $TempScriptBlockText
             If ($MessageNumber -eq 1) {
