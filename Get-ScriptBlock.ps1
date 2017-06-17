@@ -12,8 +12,8 @@
 .PARAMETER List
     Grab the paths of all scripts that have been run and the last time they were run
 .PARAMETER NoName
-    When listing scripts, include those run without a path
-    Warning: This might drastically increase the number returned
+    When listing or dumping scripts, include those run without a path
+    Warning: This might drastically increase the number of items returned
 .PARAMETER Dump
     Save the contents of all scripts to a designated folder
 .PARAMETER ScriptName
