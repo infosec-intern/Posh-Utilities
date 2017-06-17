@@ -60,7 +60,7 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
             $ScriptLastRunList += $NewScript
         }
     }
-    Write-Output $ScriptLastRunList
+    Write-Output -InputObject $ScriptLastRunList
 }
 ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
     $Events | ForEach-Object {
