@@ -48,6 +48,7 @@ $Events = Get-WinEvent -ComputerName $ComputerName -FilterHashtable @{
 }
 
 If ($PSCmdlet.ParameterSetName -eq "List") {
+    Write-Verbose -Message "Listing all PowerShell scriptblocks run and their last-run times"
     $ScriptLastRunList = @()
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
@@ -56,13 +57,14 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
             $NewScript = New-Object psobject
             $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
             $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
-            Write-Verbose -Message "Adding $ScriptPath to list"
+            Write-Debug -Message "Adding $ScriptPath to list"
             $ScriptLastRunList += $NewScript
         }
     }
     Write-Output -InputObject $ScriptLastRunList
 }
 ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
+    Write-Verbose -Message "Searching event logs for '$ScriptName'"
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
         $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
@@ -72,12 +74,12 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
         $Destination = Join-Path -Path $OutFolder -ChildPath $ScriptName
         # if the destination file already exists, don't write it out
         If (Test-Path -Path $Destination) {
-            Write-Verbose -Message "'$Destination' already exists. Skipping ($MessageNumber/$MessageTotal)"
+            Write-Debug -Message "'$Destination' already exists. Skipping ($MessageNumber/$MessageTotal)"
             continue
         }
         # check if the user's ScriptName input is seen in the path
         If ($ScriptName -iin $ScriptPath) {
-            Write-Verbose -Message "Writing '$Destination' ($MessageNumber/$MessageTotal)"
+            Write-Debug -Message "Writing '$Destination' ($MessageNumber/$MessageTotal)"
             $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
             If ($MessageNumber -eq 1) {
                 Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
@@ -91,7 +93,7 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
     }
 }
 ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
-    $CurrentScriptId = 0
+    Write-Verbose -Message "Dumping out all unique PowerShell scripts from event logs"
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
         $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
@@ -99,9 +101,6 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
         $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
         $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
-        If ($ScriptBlockId -ne $CurrentScriptId) {
-            $CurrentScriptId = $ScriptBlockId
-        }
         If ($ScriptPath -eq $null) {
             # If no scriptpath exists, write it out using the block id
             $ScriptPath = "$ScriptBlockId.ps1"
