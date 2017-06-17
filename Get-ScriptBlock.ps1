@@ -89,7 +89,10 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
         $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
         $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
-        $Destination = Join-Path -Path $OutFolder -ChildPath $(Split-Path -Leaf $ScriptName)
+        If ($ScriptPath -eq $null) {
+            return
+        }
+        $Destination = Join-Path -Path $OutFolder -ChildPath $(Split-Path -Leaf $ScriptPath)
         # if the destination file already exists, don't write it out
         If (Test-Path -Path $Destination) {
             Write-Verbose -Message "'$Destination' already exists. Skipping ($MessageNumber/$MessageTotal)"
@@ -98,7 +101,7 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
             return
         }
         # check if the user's ScriptName input is seen in the path
-        If (($ScriptPath -ne  $null) -and ([string]$ScriptPath.Contains($ScriptName))) {
+        If ([string]$ScriptPath.Contains($ScriptName)) {
             $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
             $ScriptBlockText += $TempScriptBlockText
             If ($MessageNumber -eq 1) {
