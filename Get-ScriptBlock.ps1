@@ -89,17 +89,16 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
 }
 ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
     Write-Verbose -Message "Searching event logs for '$ScriptName'"
-    # Since scriptblock text is written in reverse in event logs, need to store it at once
+    # Since scriptblock text is written in reverse in event logs, need to store blocks at once then write them out at the end
     $TempScriptBlockText = ""
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
         If ($ScriptPath -eq $null) {
-            # ScriptName requires a value in ScriptPath, so we know these can be skipped
+            # ScriptName requires a value in ScriptPath, so we know these empty ones can be skipped
             return
         }
-        # check if the user's ScriptName input is seen in the path
-        If ([string]$ScriptPath.Contains($ScriptName)) {
+        If ($(Split-Path -Leaf $ScriptPath) -eq $ScriptName) {
             $Destination = Join-Path -Path $OutFolder -ChildPath $(Split-Path -Leaf $ScriptPath)
             $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
             $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
@@ -119,7 +118,6 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
 }
 ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
     Write-Verbose -Message "Dumping out all unique PowerShell scripts from event logs"
-    # Since scriptblock text is written in reverse in event logs, need to store it at once
     $TempScriptBlockText = ""
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
