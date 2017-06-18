@@ -2,9 +2,7 @@
 .SYNOPSIS
     Extract scriptblocks held in the PowerShell Applications and Services event log
 .DESCRIPTION
-    Extract scriptblocks held in the PowerShell Applications and Services event log.
-    This includes everythibg from listing the filepaths and their last run time to dumping out the contents of all scripts
-    contained within the event log. It also isn't just limited to the local computer. Remote scriptblocks can be extracted as well
+    Extract scriptblocks held in the PowerShell Applications and Services event log. This includes everythibg from listing the filepaths and their last run time to dumping out the contents of all scripts contained within the event log. It also isn't just limited to the local computer. Remote scriptblocks can be extracted as well
 .PARAMETER ComputerName
     Remote computer to search event logs on. Default is the local computer
 .PARAMETER Credential
@@ -12,8 +10,7 @@
 .PARAMETER List
     Grab the paths of all scripts that have been run and the last time they were run
 .PARAMETER NoName
-    When listing or dumping scripts, include those run without a path
-    Warning: This might drastically increase the number of items returned
+    When listing or dumping scripts, include those run without a path. Warning: This might drastically increase the number of items returned
 .PARAMETER Dump
     Save the contents of all scripts to a designated folder
 .PARAMETER ScriptName
@@ -30,9 +27,7 @@
     C:\Users\User\Desktop\Posh-VirusTotal.psm1                      6/17/2017 3:22:30 PM
 
 
-    Simply running the scripts runs the "List" mode by default, where the named scripts in your logs are displayed
-    alongside the last time each one was run. This output is an array of PSObjects, so you can sort and filter them just
-    like any other collection of objects in PowerShell
+    Simply running the scripts runs the "List" mode by default, where the named scripts in your logs are displayed alongside the last time each one was run. This output is an array of PSObjects, so you can sort and filter them just like any other collection of objects in PowerShell
 .EXAMPLE
     .\Get-ScriptBlock.ps1 -List -NoName
 
@@ -47,15 +42,12 @@
     ed396b5f-5514-40e9-bcea-0eacf6acfc36                            6/17/2017 10:34:09 AM
 
 
-    Running the script in List mode along with the "NoName" parameter lists any scripts in your logs that don't have a ScriptPath
-    associated with them. These scripts are listed instead by their unique ScriptBlockId, which can then be used to look up their
-    contents directly in the event logs
+    Running the script in List mode along with the "NoName" parameter lists any scripts in your logs that don't have a ScriptPath associated with them. These scripts are listed instead by their unique ScriptBlockId, which can then be used to look up their contents directly in the event logs
 .EXAMPLE
     .\Get-ScriptBlock.ps1 -ScriptName CL_Utility.ps1 -OutFolder .\ps-scripts\
 
 
-    Search the event logs for a specific script name and (optionally) write to a specific folder
-    The script name must match exactly, no regular expression syntax or substrings allowed
+    Search the event logs for a specific script name and (optionally) write to a specific folder. The script name must match exactly, no regular expression syntax or substrings allowed
 .EXAMPLE
     .\Get-ScriptBlock.ps1 -Dump -OutFolder .\ps-scripts\
 
