@@ -21,6 +21,40 @@
 .PARAMETER OutFolder
     Particular folder to save scripts to. Default is the current one
 .EXAMPLE
+    Simply running the scripts runs the "List" mode by default, where the named scripts in your logs are displayed
+    alongside the last time each one was run. This output is an array of PSObjects, so you can sort and filter them just
+    like any other collection of objects in PowerShell
+
+    PS C:\> .\Get-ScriptBlock.ps1
+
+    ScriptPath                                                                                          LastRunTime
+    ----------                                                                                          -----------
+    C:\Users\User\Desktop\Import-EditorCommand.ps1                                                      6/17/2017 4:15:02 PM
+    C:\Users\User\Desktop\PowerShellEditorServices.psm1                                                 6/17/2017 4:14:59 PM
+    C:\Users\User\Desktop\Posh-VirusTotal.psm1                                                          6/17/2017 3:22:30 PM
+    C:\Users\User\Desktop\Import-EditorCommand.ps1                                                      6/17/2017 9:56:24 AM
+    C:\Users\User\Desktop\PowerShellEditorServices.psm1                                                 6/17/2017 9:56:21 AM
+    C:\WINDOWS\TEMP\SDIAG_c0b31df7-04e4-41b1-a16d-e955faa66cc1\CL_Utility.ps1                           6/15/2017 8:43:54 PM
+    C:\Users\User\AppData\Local\Temp\SDIAG_bf5daae2-2cca-4a95-9efe-569c2e9803c3\UtilityFunctions.ps1    6/11/2017 10:16:57 PM
+
+
+.EXAMPLE
+    Running the script in List mode along with the "NoName" parameter lists any scripts in your logs that don't have a ScriptPath
+    associated with them. These scripts are listed instead by their unique ScriptBlockId, which can then be used to look up their
+    contents directly in the event logs
+
+    PS C:\> .\Get-ScriptBlock.ps1 -List -NoName
+
+    ScriptPath                                                      LastRunTime
+    ----------                                                      -----------
+    C:\Users\User\Desktop\Import-EditorCommand.ps1                  6/17/2017 4:15:02 PM
+    C:\Users\User\Desktop\PowerShellEditorServices.psm1             6/17/2017 4:14:59 PM
+    C:\Users\User\Desktop\Posh-VirusTotal.psm1                      6/17/2017 3:22:30 PM
+    739a4905-3133-4586-b0c3-29dd9c16f26b                            6/17/2017 10:34:09 AM
+    1468efda-bcce-4247-a89b-4a27bb83275b                            6/17/2017 10:34:09 AM
+    69159608-5e63-49ac-b45e-0c80a8673026                            6/17/2017 10:34:09 AM
+    ed396b5f-5514-40e9-bcea-0eacf6acfc36                            6/17/2017 10:34:09 AM
+
 .LINK
     https://github.com/infosec-intern/Posh-Utilities/blob/master/Get-ScriptBlock.ps1
     https://blogs.technet.microsoft.com/ashleymcglone/2013/08/28/powershell-get-winevent-xml-madness-getting-details-from-event-logs/
