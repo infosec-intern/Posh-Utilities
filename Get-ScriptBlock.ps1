@@ -67,7 +67,7 @@
 
     Dump out every script in the event logs. The non-named ones will be dumped using their ScriptBlockId taken directly from the logs
 .LINK
-    https://github.com/infosec-intern/Posh-Utilities/blob/master/Get-ScriptBlock.ps1
+    https://github.com/infosec-intern/Posh-Utilities/
     https://blogs.technet.microsoft.com/ashleymcglone/2013/08/28/powershell-get-winevent-xml-madness-getting-details-from-event-logs/
     https://stackoverflow.com/questions/7760013/why-does-continue-behave-like-break-in-a-foreach-object
 #>
