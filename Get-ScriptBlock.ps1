@@ -101,12 +101,13 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
         If ($(Split-Path -Leaf $ScriptPath) -eq $ScriptName) {
             $Destination = Join-Path -Path $OutFolder -ChildPath $(Split-Path -Leaf $ScriptPath)
             $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
-            $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
             $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
-            $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
             $ScriptBlockText += $TempScriptBlockText
+            $TempScriptBlockText = $ScriptBlockText
             If ($MessageNumber -eq 1) {
                 Write-Verbose -Message "Writing '$Destination'"
+                $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
+                $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
                 Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
                 Write-Output -InputObject "# ScriptBlockId: $ScriptBlockId" | Out-File -FilePath $Destination -Append
                 Write-Output -InputObject "# Total Sections: $MessageTotal" | Out-File -FilePath $Destination -Append
