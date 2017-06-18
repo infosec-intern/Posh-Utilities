@@ -16,13 +16,24 @@
 .LINK
     https://github.com/infosec-intern/Posh-Utilities/
 #>
-[CmdletBinding()]
+[CmdletBinding(DefaultParameterSetName="List")]
 
 Param(
+    [Parameter()]
+    [string]$ComputerName = "$env:COMPUTERNAME",
+    [Parameter()]
+    [PSCredential]$Credential,
     [Parameter(ParameterSetName="List")]
-    [switch]$List,
-    [Parameter(ParameterSetName="Computer")]
-    [string]$ComputerName,
-    [Parameter(ParameterSetName="Computer")]
-    [PSCredential]$Credential
+    [switch]$List
 )
+
+$EventLogFilter = @{
+    "ProviderName"="Microsoft-Windows-WinRM"
+}
+
+If ($Credential) {
+    $Events = Get-WinEvent -ComputerName $ComputerName -Credential $Credential -FilterHashtable $EventLogFilter
+}
+Else {
+    $Events = Get-WinEvent -ComputerName $ComputerName -FilterHashtable $EventLogFilter
+}
