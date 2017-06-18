@@ -17,7 +17,7 @@
 .PARAMETER Dump
     Save the contents of all scripts to a designated folder
 .PARAMETER ScriptName
-    Save the contents of a particular script to a designated folder
+    Save the contents of a particular script to a designated folder. Requires the full name specified including extension
 .PARAMETER OutFolder
     Particular folder to save scripts to. Default is the current one
 .EXAMPLE
