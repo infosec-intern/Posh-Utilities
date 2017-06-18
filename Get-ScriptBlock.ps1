@@ -23,11 +23,11 @@
 .EXAMPLE
     .\Get-ScriptBlock.ps1
 
-    ScriptPath                                                                                          LastRunTime
-    ----------                                                                                          -----------
-    C:\Users\User\Desktop\Import-EditorCommand.ps1                                                      6/17/2017 4:15:02 PM
-    C:\Users\User\Desktop\PowerShellEditorServices.psm1                                                 6/17/2017 4:14:59 PM
-    C:\Users\User\Desktop\Posh-VirusTotal.psm1                                                          6/17/2017 3:22:30 PM
+    ScriptPath                                                      LastRunTime
+    ----------                                                      -----------
+    C:\Users\User\Desktop\Import-EditorCommand.ps1                  6/17/2017 4:15:02 PM
+    C:\Users\User\Desktop\PowerShellEditorServices.psm1             6/17/2017 4:14:59 PM
+    C:\Users\User\Desktop\Posh-VirusTotal.psm1                      6/17/2017 3:22:30 PM
 
 
     Simply running the scripts runs the "List" mode by default, where the named scripts in your logs are displayed
@@ -50,6 +50,22 @@
     Running the script in List mode along with the "NoName" parameter lists any scripts in your logs that don't have a ScriptPath
     associated with them. These scripts are listed instead by their unique ScriptBlockId, which can then be used to look up their
     contents directly in the event logs
+.EXAMPLE
+    .\Get-ScriptBlock.ps1 -ScriptName CL_Utility.ps1 -OutFolder .\ps-scripts\
+
+
+    Search the event logs for a specific script name and (optionally) write to a specific folder
+    The script name must match exactly, no regular expression syntax or substrings allowed
+.EXAMPLE
+    .\Get-ScriptBlock.ps1 -Dump -OutFolder .\ps-scripts\
+
+
+    Dump out all the named PowerShell scripts from the event logs. Any that appear in the default List mode will be written
+.EXAMPLE
+    .\Get-ScriptBlock.ps1 -Dump -OutFolder .\ps-scripts\ -NoName
+
+
+    Dump out every script in the event logs. The non-named ones will be dumped using their ScriptBlockId taken directly from the logs
 .LINK
     https://github.com/infosec-intern/Posh-Utilities/blob/master/Get-ScriptBlock.ps1
     https://blogs.technet.microsoft.com/ashleymcglone/2013/08/28/powershell-get-winevent-xml-madness-getting-details-from-event-logs/
