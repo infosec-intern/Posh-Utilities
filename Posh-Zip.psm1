@@ -19,21 +19,11 @@ Function Invoke-Zip {
         [Parameter(Mandatory=$false,Position=1)]
         [String]$Name
     )
-    Begin
-    {
-        if (-not (Test-Path $Path -PathType Container))
-        {
-            Throw "$Path is not an existing directory"
-        }
-        Add-Type -AssemblyName "System.IO.Compression.Filesystem"
+    If (-not (Test-Path $Path -PathType Container)) {
+        Throw "$Path is not an existing directory"
     }
-    Process
-    {
-        [IO.Compression.Zipfile]::CreateFromDirectory($Path, $Name)
-    }
-    End
-    {
-    }
+    Add-Type -AssemblyName "System.IO.Compression.Filesystem"
+    [IO.Compression.Zipfile]::CreateFromDirectory($Path, $Name)
 }
 
 Function Invoke-Unzip {
@@ -57,16 +47,7 @@ Function Invoke-Unzip {
         [Parameter(Mandatory=$true,Position=1)]
         [String]$Destination
     )
-    Begin
-    {
-        Add-Type -AssemblyName "System.IO.Compression.Filesystem"
-    }
-    Process
-    {
-    }
-    End
-    {
-    }
+    Add-Type -AssemblyName "System.IO.Compression.Filesystem"
 }
 
 Export-ModuleMember Invoke-Zip
