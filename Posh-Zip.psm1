@@ -26,6 +26,7 @@ Function Invoke-Zip {
     If (Test-Path $Path -PathType Container) {
         Add-Type -AssemblyName "System.IO.Compression.Filesystem"
         [IO.Compression.Zipfile]::CreateFromDirectory($Path, $Name)
+    }
     Else {
         Throw "$Path is not an existing directory"
     }
