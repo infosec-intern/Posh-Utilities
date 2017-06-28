@@ -10,6 +10,9 @@ Function Invoke-Zip {
     Invoke-Zip -Path ~/Downloads -Name downloads.zip
 .LINK
     http://blogs.technet.com/b/heyscriptingguy/archive/2015/03/09/use-powershell-to-create-zip-archive-of-folder.aspx
+    https://msdn.microsoft.com/en-us/library/system.io.compression.compressionlevel(v=vs.110).aspx
+    https://msdn.microsoft.com/en-us/library/hh485707(v=vs.110).aspx
+
 #>
     [CmdletBinding()]
     Param(
@@ -21,11 +24,29 @@ Function Invoke-Zip {
         [Alias("Destination", "DestinationArchiveFileName")]
         [String]$Name,
         [Parameter(Mandatory=$false)]
-        [Switch]$IncludeBaseDirectory
+        [Switch]$IncludeBaseDirectory,
+        [Parameter(Mandatory=$false)]
+        [ValidateSet("Fastest","NoCompression","Optimal")]
+        $CompressionLevel = "Optimal"
     )
     If (Test-Path $Path -PathType Container) {
         Add-Type -AssemblyName "System.IO.Compression.Filesystem"
-        [IO.Compression.Zipfile]::CreateFromDirectory($Path, $Name)
+        switch ($CompressionLevel) {
+            "Optimal" {
+                $CompressionLevel = [IO.Compression]::CompressionLevel.Optimal
+            }
+            "Fastest" {
+                $CompressionLevel = [IO.Compression]::CompressionLevel.Fastest
+            }
+            "NoCompression" {
+                $CompressionLevel = [IO.Compression]::CompressionLevel.NoCompression
+            }
+            Default {
+                # Redundant, but might as well have it
+                $CompressionLevel = [IO.Compression]::CompressionLevel.Optimal
+            }
+        }
+        [IO.Compression.Zipfile]::CreateFromDirectory($Path, $Name, $CompressionLevel, $IncludeBaseDirectory)
     }
     Else {
         Throw "$Path is not an existing directory"
@@ -44,6 +65,7 @@ Function Invoke-Unzip {
     Invoke-Unzip -Path .\downloads.zip -Destination ~/Downloads
 .LINK
     http://blogs.technet.com/b/heyscriptingguy/archive/2015/03/09/use-powershell-to-create-zip-archive-of-folder.aspx
+    https://msdn.microsoft.com/en-us/library/hh485724(v=vs.110).aspx
 #>
     [CmdletBinding()]
     Param(
