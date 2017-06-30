@@ -27,7 +27,7 @@ Function Invoke-Zip {
         [Switch]$IncludeBaseDirectory,
         [Parameter(Mandatory=$false)]
         [ValidateSet("Fastest","NoCompression","Optimal")]
-        $CompressionLevel = "Optimal"
+        $CompressionLevel
     )
     Add-Type -AssemblyName "System.IO.Compression.Filesystem"
     switch ($CompressionLevel) {
@@ -41,7 +41,6 @@ Function Invoke-Zip {
             $CompressionLevel = [IO.Compression]::CompressionLevel.NoCompression
         }
         Default {
-            # Redundant, but might as well have it
             $CompressionLevel = [IO.Compression]::CompressionLevel.Optimal
         }
     }
