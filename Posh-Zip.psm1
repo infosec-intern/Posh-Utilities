@@ -47,9 +47,6 @@ Function Invoke-Zip {
     If (Test-Path $Path -PathType Container) {
         [IO.Compression.ZipFile]::CreateFromDirectory($Path, $Name, $CompressionLevel, $IncludeBaseDirectory)
     }
-    ElseIf (Test-Path $Path -PathType Leaf) {
-        [IO.Compression.ZipFileExtensions]::CreateEntryFromFile()
-    }
     Else {
         Throw "$Path is not an existing directory"
     }
