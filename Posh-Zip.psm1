@@ -32,20 +32,20 @@ Function Invoke-Zip {
     Add-Type -AssemblyName "System.IO.Compression.Filesystem"
     switch ($CompressionLevel) {
         "Optimal" {
-            $CompressionLevel = [IO.Compression]::CompressionLevel.Optimal
+            $CompressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
         }
         "Fastest" {
-            $CompressionLevel = [IO.Compression]::CompressionLevel.Fastest
+            $CompressionLevel = [System.IO.Compression.CompressionLevel]::Fastest
         }
         "NoCompression" {
-            $CompressionLevel = [IO.Compression]::CompressionLevel.NoCompression
+            $CompressionLevel = [System.IO.Compression.CompressionLevel]::NoCompression
         }
         Default {
-            $CompressionLevel = [IO.Compression]::CompressionLevel.Optimal
+            $CompressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
         }
     }
     If (Test-Path $Path -PathType Container) {
-        [IO.Compression.ZipFile]::CreateFromDirectory($Path, $Name, $CompressionLevel, $IncludeBaseDirectory)
+        [System.IO.Compression.ZipFile]::CreateFromDirectory($Path, $Name, $CompressionLevel, $IncludeBaseDirectory)
     }
     Else {
         Throw "$Path is not an existing directory"
@@ -59,7 +59,7 @@ Function Invoke-Unzip {
 .PARAMETER Path
     Archive to extract
 .PARAMETER Destination
-    Folder to extract data to
+    Folder to extract data to. Default is the current folder
 .EXAMPLE
     Invoke-Unzip -Path .\downloads.zip -Destination ~/Downloads
 .LINK
@@ -76,9 +76,13 @@ Function Invoke-Unzip {
         [Alias("DestinationDirectoryName")]
         [String]$Destination = "$(Convert-Path -Path .)"
     )
+    Write-Verbose -Message "Extracting archive into '$Destination'"
     If (Test-Path $Path -PathType Leaf) {
         Add-Type -AssemblyName "System.IO.Compression.Filesystem"
-        [IO.Compression.ZipFile]::ExtractToDirectory()
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($Path, $Destination)
+        If (Test-Path $Destination) {
+            Write-Verbose -Message "Successfully extracted to '$Destination'"
+        }
     }
     Else {
         Throw "$Path is not a valid file"
