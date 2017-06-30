@@ -12,7 +12,7 @@ Function Invoke-Zip {
     http://blogs.technet.com/b/heyscriptingguy/archive/2015/03/09/use-powershell-to-create-zip-archive-of-folder.aspx
     https://msdn.microsoft.com/en-us/library/system.io.compression.compressionlevel(v=vs.110).aspx
     https://msdn.microsoft.com/en-us/library/hh485707(v=vs.110).aspx
-
+    https://msdn.microsoft.com/en-us/library/hh485724(v=vs.110).aspx
 #>
     [CmdletBinding()]
     Param(
@@ -29,24 +29,27 @@ Function Invoke-Zip {
         [ValidateSet("Fastest","NoCompression","Optimal")]
         $CompressionLevel = "Optimal"
     )
-    If (Test-Path $Path -PathType Container) {
-        Add-Type -AssemblyName "System.IO.Compression.Filesystem"
-        switch ($CompressionLevel) {
-            "Optimal" {
-                $CompressionLevel = [IO.Compression]::CompressionLevel.Optimal
-            }
-            "Fastest" {
-                $CompressionLevel = [IO.Compression]::CompressionLevel.Fastest
-            }
-            "NoCompression" {
-                $CompressionLevel = [IO.Compression]::CompressionLevel.NoCompression
-            }
-            Default {
-                # Redundant, but might as well have it
-                $CompressionLevel = [IO.Compression]::CompressionLevel.Optimal
-            }
+    Add-Type -AssemblyName "System.IO.Compression.Filesystem"
+    switch ($CompressionLevel) {
+        "Optimal" {
+            $CompressionLevel = [IO.Compression]::CompressionLevel.Optimal
         }
-        [IO.Compression.Zipfile]::CreateFromDirectory($Path, $Name, $CompressionLevel, $IncludeBaseDirectory)
+        "Fastest" {
+            $CompressionLevel = [IO.Compression]::CompressionLevel.Fastest
+        }
+        "NoCompression" {
+            $CompressionLevel = [IO.Compression]::CompressionLevel.NoCompression
+        }
+        Default {
+            # Redundant, but might as well have it
+            $CompressionLevel = [IO.Compression]::CompressionLevel.Optimal
+        }
+    }
+    If (Test-Path $Path -PathType Container) {
+        [IO.Compression.ZipFile]::CreateFromDirectory($Path, $Name, $CompressionLevel, $IncludeBaseDirectory)
+    }
+    ElseIf (Test-Path $Path -PathType Leaf) {
+        [IO.Compression.ZipFileExtensions]::CreateEntryFromFile()
     }
     Else {
         Throw "$Path is not an existing directory"
@@ -65,18 +68,21 @@ Function Invoke-Unzip {
     Invoke-Unzip -Path .\downloads.zip -Destination ~/Downloads
 .LINK
     http://blogs.technet.com/b/heyscriptingguy/archive/2015/03/09/use-powershell-to-create-zip-archive-of-folder.aspx
-    https://msdn.microsoft.com/en-us/library/hh485724(v=vs.110).aspx
+    https://msdn.microsoft.com/en-us/library/hh485723(v=vs.110).aspx
 #>
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
+        [Alias("Source", "SourceArchiveFileName")]
         [String]$Path,
         [Parameter(Mandatory=$true,Position=1)]
-        [String]$Destination
+        [Alias("DestinationDirectoryName")]
+        [String]$Destination = "$(Convert-Path -Path .)"
     )
     If (Test-Path $Path -PathType Leaf) {
         Add-Type -AssemblyName "System.IO.Compression.Filesystem"
+        [IO.Compression.ZipFile]::ExtractToDirectory()
     }
     Else {
         Throw "$Path is not a valid file"
