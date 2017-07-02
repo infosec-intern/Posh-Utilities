@@ -62,6 +62,11 @@ Function Invoke-Zip {
         }
     }
     If (Test-Path -Path $Path -PathType Container) {
+        If (-not $Name) {
+            # convert the directory name into <directory>.zip
+            $Name = Split-Path -Path "$(Convert-Path $Path)" -Leaf
+            $Name += ".zip"
+        }
         [System.IO.Compression.ZipFile]::CreateFromDirectory($Path, $Name, $CompressionLevel, $IncludeBaseDirectory)
         If (Test-Path -Path $Name) {
             Write-Verbose -Message "Successfully zipped '$Path' to '$Name'"
