@@ -6,8 +6,25 @@ Function Invoke-Zip {
     Folder to compress into a zip archive
 .PARAMETER Name
     Name of resulting zip archive
+.PARAMETER IncludeBaseDirectory
+    Switch to determine if the folder specified by $Path is included in the zip archive
+    Default is False
+.PARAMETER CompressionLevel
+    Modifies the compression algorithm used when creating the zip archive
+    Allowed values below. Default is Optimal
+        1) Fastest: The compression operation should complete as quickly as possible, even if the resulting file is not optimally compressed
+        2) NoCompression: No compression should be performed on the file.
+        3) Optimal: The compression operation should be optimally compressed, even if the operation takes a longer time to complete.
 .EXAMPLE
     Invoke-Zip -Path ~/Downloads -Name downloads.zip
+
+    Result file contents:
+        downloads.zip > testfile.txt
+.EXAMPLE
+    Invoke-Zip -Path ~/Downloads -Name downloads.zip -CompressionLevel Fastest -IncludeBaseDirectory
+
+    Resulting file contents:
+        downloads.zip > Downloads/ > testfile.txt
 .LINK
     http://blogs.technet.com/b/heyscriptingguy/archive/2015/03/09/use-powershell-to-create-zip-archive-of-folder.aspx
     https://msdn.microsoft.com/en-us/library/system.io.compression.compressionlevel(v=vs.110).aspx
