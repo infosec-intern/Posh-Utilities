@@ -44,8 +44,11 @@ Function Invoke-Zip {
             $CompressionLevel = [System.IO.Compression.CompressionLevel]::Optimal
         }
     }
-    If (Test-Path $Path -PathType Container) {
+    If (Test-Path -Path $Path -PathType Container) {
         [System.IO.Compression.ZipFile]::CreateFromDirectory($Path, $Name, $CompressionLevel, $IncludeBaseDirectory)
+        If (Test-Path -Path $Name) {
+            Write-Verbose -Message "Successfully zipped '$Path' to '$Name'"
+        }
     }
     Else {
         Throw "$Path is not an existing directory"
