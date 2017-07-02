@@ -5,7 +5,7 @@ Function Invoke-Zip {
 .PARAMETER Path
     Folder to compress into a zip archive
 .PARAMETER Name
-    Name of resulting zip archive
+    Name of resulting zip archive. Defaults to the pathname + ".zip" extension
 .PARAMETER IncludeBaseDirectory
     Switch to determine if the folder specified by $Path is included in the zip archive
     Default is False
