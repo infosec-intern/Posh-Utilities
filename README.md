@@ -25,3 +25,11 @@ WinRM service started.
 Created a WinRM listener on HTTP://* to accept WS-Man requests to any IP on this machine.
 ```
 More info about enabling WinRM can be found at [MSDN](!https://msdn.microsoft.com/en-us/library/aa384372(v=vs.85).aspx)
+
+## Encoder
+Base64 encoder and simple XOR encryptor. As far as the base64 encoder goes, the `rootkit.ps1` file has an easier-to-use encode/decode function imo
+
+## Query-VM
+Super quick test of using WMI to identify default VirtualBox and VMWare keys.
+
+Should be expanded upon later when I can do some more research on registry and hardware keys
