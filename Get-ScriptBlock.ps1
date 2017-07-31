@@ -145,11 +145,19 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
                 Write-Verbose -Message "Writing '$Destination'"
                 $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
                 $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
-                Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
-                Write-Output -InputObject "# ScriptBlockId: $ScriptBlockId" | Out-File -FilePath $Destination -Append
-                Write-Output -InputObject "# Total Sections: $MessageTotal" | Out-File -FilePath $Destination -Append
-                Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
+                # Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
+                # Write-Output -InputObject "# ScriptBlockId: $ScriptBlockId" | Out-File -FilePath $Destination -Append
+                # Write-Output -InputObject "# Total Sections: $MessageTotal" | Out-File -FilePath $Destination -Append
+                # Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
                 # Completely break out of the ForEach-Object pipeline when the script has been found
+                $NewScript = New-Object psobject
+                $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
+                $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptName" -Value $(Split-Path -Leaf $ScriptPath)
+                $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
+                $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptBlockId" -Value $ScriptBlockId
+                $NewScript | Add-Member -MemberType NoteProperty -Name "MessageTotal" -Value $MessageTotal
+                $NewScript | Add-Member -MemberType NoteProperty -Name "Text" -Value $ScriptBlockText
+                Write-Output $NewScript
                 continue
             }
         }
@@ -183,10 +191,18 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
         If ($MessageNumber -eq 1) {
             $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
             Write-Verbose -Message "Writing '$Destination': $MessageTotal sections"
-            Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
-            Write-Output -InputObject "# ScriptBlockId: $ScriptBlockId" | Out-File -FilePath $Destination -Append
-            Write-Output -InputObject "# Total Sections: $MessageTotal" | Out-File -FilePath $Destination -Append
-            Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
+            # Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
+            # Write-Output -InputObject "# ScriptBlockId: $ScriptBlockId" | Out-File -FilePath $Destination -Append
+            # Write-Output -InputObject "# Total Sections: $MessageTotal" | Out-File -FilePath $Destination -Append
+            # Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
+            $NewScript = New-Object psobject
+            $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
+            $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptName" -Value $(Split-Path -Leaf $ScriptPath)
+            $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
+            $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptBlockId" -Value $ScriptBlockId
+            $NewScript | Add-Member -MemberType NoteProperty -Name "MessageTotal" -Value $MessageTotal
+            $NewScript | Add-Member -MemberType NoteProperty -Name "Text" -Value $ScriptBlockText
+            Write-Output $NewScript
             $TempScriptBlockText = ""
         }
     }
