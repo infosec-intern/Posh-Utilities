@@ -80,10 +80,10 @@ Param(
     [Parameter(ParameterSetName="Script", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     [string]$ScriptName,
-    [Parameter(ParameterSetName="Dump")]
-    [Parameter(ParameterSetName="Script")]
-    [ValidateNotNullOrEmpty()]
-    [string]$OutFolder = "$(Convert-Path -Path .)"
+    # [Parameter(ParameterSetName="Dump")]
+    # [Parameter(ParameterSetName="Script")]
+    # [ValidateNotNullOrEmpty()]
+    # [string]$OutFolder = "$(Convert-Path -Path .)"
 )
 
 If ($Credential) {
