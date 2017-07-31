@@ -41,6 +41,7 @@ Param(
 #   File count: 1
 # Event ID 5 shows cancelled jobs
 #   Job cancelled. User: NT AUTHORITY\NETWORK SERVICE, job: MicrosoftMapsBingGeoStore, jobID: {8636eee8-dc04-472e-aa33-60838f7a4232}, owner: NT AUTHORITY\NETWORK SERVICE, filecount: 0
-# Event IDs 59 & 60 show URL for session
+# Event IDs 59, 60, & 61 show URL for session. 61 appears to be exclusively for jobs that ended early
 #   BITS started the Push Notification Platform Job: 1 transfer job that is associated with the http://google.com/ URL.
 #   BITS stopped transferring the Push Notification Platform Job: 1 transfer job that is associated with the http://google.com/ URL. The status code is 0x0.
+#   BITS stopped transferring the Push Notification Platform Job: 1 transfer job that is associated with the http://google.com/ URL. The status code is 0x80072EE7.
