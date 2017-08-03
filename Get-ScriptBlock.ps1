@@ -97,7 +97,7 @@ Else {
 
 If ($PSCmdlet.ParameterSetName -eq "List") {
     Write-Verbose -Message "Listing all PowerShell scriptblocks run and their last-run times"
-    $ScriptLastRunList = @()
+    $Scripts = @()
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
         $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
@@ -111,16 +111,16 @@ If ($PSCmdlet.ParameterSetName -eq "List") {
                 return
             }
         }
-        If (($ScriptLastRunList).ScriptPath -notcontains $ScriptPath) {
+        If (($Scripts).ScriptPath -notcontains $ScriptPath) {
             $NewScript = New-Object psobject
             $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
             $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
-            $ScriptLastRunList += $NewScript
+            $Scripts += $NewScript
         }
     }
-    Write-Output -InputObject $ScriptLastRunList
 }
 ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
+    $Scripts = @()
     Write-Verbose -Message "Searching event logs for '$ScriptName'"
     # Since scriptblock text is written in reverse in event logs, need to store blocks at once then write them out at the end
     $TempScriptBlockText = ""
@@ -147,14 +147,14 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
                 $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptBlockId" -Value $ScriptBlockId
                 $NewScript | Add-Member -MemberType NoteProperty -Name "MessageTotal" -Value $MessageTotal
                 $NewScript | Add-Member -MemberType NoteProperty -Name "Text" -Value $ScriptBlockText
-                Write-Output $NewScript
-                continue
+                $Scripts += $NewScript
             }
         }
     }
 }
 ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
     Write-Verbose -Message "Dumping out all unique PowerShell scripts from event logs"
+    $Scripts = @()
     $TempScriptBlockText = ""
     $Events | ForEach-Object {
         $EventXML = [xml]$_.ToXML()
@@ -189,8 +189,10 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
             $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptBlockId" -Value $ScriptBlockId
             $NewScript | Add-Member -MemberType NoteProperty -Name "MessageTotal" -Value $MessageTotal
             $NewScript | Add-Member -MemberType NoteProperty -Name "Text" -Value $ScriptBlockText
-            Write-Output $NewScript
+            $Scripts += $NewScript
             $TempScriptBlockText = ""
         }
     }
 }
+
+Write-Output -InputObject $Scripts
