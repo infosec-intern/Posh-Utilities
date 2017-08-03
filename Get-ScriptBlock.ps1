@@ -46,8 +46,24 @@
 .EXAMPLE
     .\Get-ScriptBlock.ps1 -ScriptName CL_Utility.ps1
 
+    ScriptPath    : C:\WINDOWS\TEMP\SDIAG_b0680a0b-4cad-49d2-a02d-546c3320f157\CL_Utility.ps1
+    ScriptName    : CL_Utility.ps1
+    LastRunTime   : 8/2/2017 6:37:06 PM
+    ScriptBlockId : 52cc0c7e-969d-49ab-baa5-65788b98b044
+    MessageTotal  : 1
+    Text          : # Copyright © 2008, Microsoft Corporation. All rights reserved.
 
-    Search the event logs for a specific script name. The script name must match exactly, no regular expression syntax or substrings allowed
+
+                    #Common utility functions
+                    Import-LocalizedData -BindingVariable localizationString -FileName CL_LocalizationData
+
+                    # Function to get user troubleshooting history
+                    function Get-UserTSHistoryPath {
+                        return "${env:localappdata}\diagnostics"
+                    }
+                    [the rest redacted for brevity]
+
+    Search the event logs for a specific script name. The script name must match exactly, no regular expression syntax or substrings allowed (for now :))
 .EXAMPLE
     .\Get-ScriptBlock.ps1 -Dump
 
