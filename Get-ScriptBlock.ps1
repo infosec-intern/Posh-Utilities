@@ -44,20 +44,20 @@
 
     Running the script in List mode along with the "NoName" parameter lists any scripts in your logs that don't have a ScriptPath associated with them. These scripts are listed instead by their unique ScriptBlockId, which can then be used to look up their contents directly in the event logs
 .EXAMPLE
-    .\Get-ScriptBlock.ps1 -ScriptName CL_Utility.ps1 -OutFolder .\ps-scripts\
+    .\Get-ScriptBlock.ps1 -ScriptName CL_Utility.ps1
 
 
-    Search the event logs for a specific script name and (optionally) write to a specific folder. The script name must match exactly, no regular expression syntax or substrings allowed
+    Search the event logs for a specific script name. The script name must match exactly, no regular expression syntax or substrings allowed
 .EXAMPLE
-    .\Get-ScriptBlock.ps1 -Dump -OutFolder .\ps-scripts\
+    .\Get-ScriptBlock.ps1 -Dump
 
 
-    Dump out all the named PowerShell scripts from the event logs. Any that appear in the default List mode will be written
+    Dump out all the named PowerShell scripts from the event logs. Any that appear in the default List mode will be passed as objects
 .EXAMPLE
-    .\Get-ScriptBlock.ps1 -Dump -OutFolder .\ps-scripts\ -NoName
+    .\Get-ScriptBlock.ps1 -Dump -NoName
 
 
-    Dump out every script in the event logs. The non-named ones will be dumped using their ScriptBlockId taken directly from the logs
+    Dump out every script in the event logs. The non-named ones will be dumped using their ScriptBlockId taken directly from the logs similar to what happens to -List
 .LINK
     https://github.com/infosec-intern/Posh-Utilities/
     https://blogs.technet.microsoft.com/ashleymcglone/2013/08/28/powershell-get-winevent-xml-madness-getting-details-from-event-logs/
@@ -79,11 +79,7 @@ Param(
     [switch]$Dump,
     [Parameter(ParameterSetName="Script", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
-    [string]$ScriptName,
-    # [Parameter(ParameterSetName="Dump")]
-    # [Parameter(ParameterSetName="Script")]
-    # [ValidateNotNullOrEmpty()]
-    # [string]$OutFolder = "$(Convert-Path -Path .)"
+    [string]$ScriptName
 )
 
 If ($Credential) {
@@ -145,10 +141,6 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
                 Write-Verbose -Message "Writing '$Destination'"
                 $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
                 $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
-                # Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
-                # Write-Output -InputObject "# ScriptBlockId: $ScriptBlockId" | Out-File -FilePath $Destination -Append
-                # Write-Output -InputObject "# Total Sections: $MessageTotal" | Out-File -FilePath $Destination -Append
-                # Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
                 # Completely break out of the ForEach-Object pipeline when the script has been found
                 $NewScript = New-Object psobject
                 $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
@@ -191,9 +183,6 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
         If ($MessageNumber -eq 1) {
             $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
             Write-Verbose -Message "Writing '$Destination': $MessageTotal sections"
-            # Write-Output -InputObject "# Recreated using Get-ScriptBlock.ps1" | Out-File -FilePath $Destination
-            # Write-Output -InputObject "# ScriptBlockId: $ScriptBlockId" | Out-File -FilePath $Destination -Append
-            # Write-Output -InputObject "# Total Sections: $MessageTotal" | Out-File -FilePath $Destination -Append
             # Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
             $NewScript = New-Object psobject
             $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
