@@ -171,7 +171,6 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
                 return
             }
         }
-        $Destination = Join-Path -Path $OutFolder -ChildPath $(Split-Path -Leaf $ScriptPath)
         If (Test-Path -Path $Destination) {
             return
         }
@@ -180,8 +179,6 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
         $TempScriptBlockText = $ScriptBlockText
         If ($MessageNumber -eq 1) {
             $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
-            Write-Verbose -Message "Writing '$Destination': $MessageTotal sections"
-            # Write-Output -InputObject $ScriptBlockText | Out-File -FilePath $Destination -Append
             $NewScript = New-Object psobject
             $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
             $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptName" -Value $(Split-Path -Leaf $ScriptPath)
