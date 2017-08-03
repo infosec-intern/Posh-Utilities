@@ -65,10 +65,17 @@
 
     Search the event logs for a specific script name. The script name must match exactly, no regular expression syntax or substrings allowed (for now :))
 .EXAMPLE
-    .\Get-ScriptBlock.ps1 -Dump
+    .\Get-ScriptBlock.ps1 -Dump | Select lastruntime,messagetotal,scriptblockid,scriptname,text | Format-Table
 
+    LastRunTime           MessageTotal ScriptBlockId                        ScriptName                           Text
+    -----------           ------------ -------------                        ----------                           ----
+    8/2/2017 10:33:02 PM  1            6929ac3d-786a-4e45-a07a-f617e6bfff77 PowerShellEditorServices.VSCode.psm1 #...
+    8/2/2017 10:33:02 PM  1            60eccfae-341f-4c9a-91d4-07384d0a46d8 Import-EditorCommand.ps1             #...
+    8/2/2017 10:32:59 PM  1            52cbbadf-0276-4061-8c55-dd5e2bac7fbd PowerShellEditorServices.psm1        #...
+    8/2/2017 6:37:06 PM   1            52cc0c7e-969d-49ab-baa5-65788b98b044 CL_Utility.ps1                       # Copyright © 2008, Microsoft Corporation. All rights reserved....
 
     Dump out all the named PowerShell scripts from the event logs. Any that appear in the default List mode will be passed as objects
+    Note: I had to drop the ScriptPath field from the output so it would fit in one screen. However, that field is included in the output
 .EXAMPLE
     .\Get-ScriptBlock.ps1 -Dump -NoName
 
