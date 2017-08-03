@@ -132,13 +132,11 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
             return
         }
         If ($(Split-Path -Leaf $ScriptPath) -eq $ScriptName) {
-            $Destination = Join-Path -Path $OutFolder -ChildPath $(Split-Path -Leaf $ScriptPath)
             $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
             $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
             $ScriptBlockText += $TempScriptBlockText
             $TempScriptBlockText = $ScriptBlockText
             If ($MessageNumber -eq 1) {
-                Write-Verbose -Message "Writing '$Destination'"
                 $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
                 $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
                 # Completely break out of the ForEach-Object pipeline when the script has been found
