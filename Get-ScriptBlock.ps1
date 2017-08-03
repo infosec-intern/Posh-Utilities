@@ -77,11 +77,6 @@
 
     Dump out all the named PowerShell scripts from the event logs. Any that appear in the default List mode will be passed as objects
     Note: I had to drop the ScriptPath field from the output so it would fit in one screen. However, that field is included in the output
-.EXAMPLE
-    .\Get-ScriptBlock.ps1 -Dump -NoName
-
-
-    Dump out every script in the event logs. The non-named ones will be dumped using their ScriptBlockId taken directly from the logs similar to what happens to -List
 .LINK
     https://github.com/infosec-intern/Posh-Utilities/
     https://blogs.technet.microsoft.com/ashleymcglone/2013/08/28/powershell-get-winevent-xml-madness-getting-details-from-event-logs/
