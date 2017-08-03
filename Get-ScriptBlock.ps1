@@ -171,9 +171,6 @@ ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
                 return
             }
         }
-        If (Test-Path -Path $Destination) {
-            return
-        }
         $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
         $ScriptBlockText += $TempScriptBlockText
         $TempScriptBlockText = $ScriptBlockText
