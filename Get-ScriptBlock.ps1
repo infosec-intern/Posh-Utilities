@@ -61,6 +61,7 @@
                     function Get-UserTSHistoryPath {
                         return "${env:localappdata}\diagnostics"
                     }
+
                     [the rest redacted for brevity]
 
     Search the event logs for a specific script name. The script name must match exactly, no regular expression syntax or substrings allowed (for now :))
