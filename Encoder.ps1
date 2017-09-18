@@ -1,25 +1,31 @@
 ﻿[CmdletBinding()]
-param(
-    [string]$msg = "Hello World",
-    [string]$secret = "ABC"
-)
+Param()
 
 Function Invoke-Base64Encode {
     param(
-        [Parameter(Mandatory=$true)][String]$msg   # string to be encoded - REQUIRED
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+            [String]$Message
     )
-    Write-Verbose "[*] Attempting Base64..."
+    Write-Verbose "[*] Attempting Base64Encode..."
 
-    $b64 = [System.Convert]::ToBase64String(
-        [System.Text.Encoding]::Unicode.GetBytes($msg)
+    $Encoded = [System.Convert]::ToBase64String(
+        [System.Text.Encoding]::Unicode.GetBytes($Message)
     )
-    Write-Output "[Base64] Encoded `"$msg`" to `"$b64`""
+    Write-Verbose "[Base64] Encoded `"$Message`" to `"$Encoded`""
+    Write-Output $Encoded
+}
 
-    $result = [System.Text.Encoding]::Unicode.GetString(
-        [System.Convert]::FromBase64String($b64)
+Function Invoke-Base64Decode {
+    param(
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+            [String]$Encoded
     )
-    Write-Output "[Base64] Decoded `"$b64`" to `"$result`""
-#    return $b64
+    Write-Verbose "[*] Attempting Base64Decode..."
+    $Decoded = [System.Text.Encoding]::Unicode.GetString(
+        [System.Convert]::FromBase64String($Encoded)
+    )
+    Write-Verbose "[Base64] Decoded `"$Encoded`" to `"$Decoded`""
+    Write-Output $Decoded
 }
 
 Function Invoke-XOREncode {
@@ -48,6 +54,3 @@ Function Invoke-XOREncode {
     $result = [System.Text.Encoding]::Unicode.GetChars($bytes)
     Write-Output "[XOR] Decoding `"$xor`" to `"$result`""
 }
-
-Invoke-Base64Encode -msg $msg
-Invoke-XOREncode -msg $msg -secret $secret
