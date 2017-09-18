@@ -2,7 +2,7 @@
 Param()
 
 Function Invoke-Base64Encode {
-    param(
+    Param(
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
             [String]$Message
     )
@@ -16,7 +16,7 @@ Function Invoke-Base64Encode {
 }
 
 Function Invoke-Base64Decode {
-    param(
+    Param(
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
             [String]$Encoded
     )
@@ -29,14 +29,15 @@ Function Invoke-Base64Decode {
 }
 
 Function Invoke-XOREncode {
-    param(
-        [Parameter(Mandatory=$true)][String]$msg, # string to be encoded - REQUIRED
-        [string]$secret                           # string to XOR with
+    Param(
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+            [String]$Message,
+        [string]$Secret
     )
     Write-Verbose "[*] Attempting XOR..."
 
-    $secret_bytes = [System.Text.Encoding]::Unicode.GetBytes($secret)
-    $char_bytes = [System.Text.Encoding]::Unicode.GetBytes($msg)
+    $secret_bytes = [System.Text.Encoding]::Unicode.GetBytes($Secret)
+    $char_bytes = [System.Text.Encoding]::Unicode.GetBytes($Message)
     $msg_length = $char_bytes.Length
     $bytes = New-Object Byte[] $msg_length
 
@@ -46,7 +47,7 @@ Function Invoke-XOREncode {
         $bytes[$i] = ($char_bytes[$i]) -bxor ($secret_bytes[($i%$secret_bytes.Length)])
     }
     $xor = [System.Text.Encoding]::Unicode.GetChars($bytes)
-    Write-Output "[XOR] Encoded `"$msg`" to `"$xor`""
+    Write-Output "[XOR] Encoded `"$Message`" to `"$xor`""
 
     For ($i=0; $i -lt $msg_length; $i++) {
         $bytes[$i] = ($secret_bytes[($i%$secret_bytes.Length)]) -bxor ($xor[$i])
