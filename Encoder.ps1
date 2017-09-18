@@ -28,7 +28,7 @@ Function Invoke-Base64Decode {
     Write-Output $Decoded
 }
 
-Function Invoke-XOREncode {
+Function Invoke-XOR {
     Param(
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
             [String]$Message,
@@ -36,22 +36,16 @@ Function Invoke-XOREncode {
     )
     Write-Verbose "[*] Attempting XOR..."
 
-    $secret_bytes = [System.Text.Encoding]::Unicode.GetBytes($Secret)
-    $char_bytes = [System.Text.Encoding]::Unicode.GetBytes($Message)
-    $msg_length = $char_bytes.Length
-    $bytes = New-Object Byte[] $msg_length
+    $SecretBytes = [System.Text.Encoding]::Unicode.GetBytes($Secret)
+    $CharBytes = [System.Text.Encoding]::Unicode.GetBytes($Message)
+    $Bytes = New-Object Byte[] $CharBytes.Length
 
-    Write-Debug "[**] secret_array = $([System.Text.Encoding]::Unicode.GetChars($secret_bytes))"
-    Write-Debug "[**] char_array = $([System.Text.Encoding]::Unicode.GetChars($char_bytes))"
-    For ($i=0; $i -lt $msg_length; $i++) {
-        $bytes[$i] = ($char_bytes[$i]) -bxor ($secret_bytes[($i%$secret_bytes.Length)])
+    Write-Debug "[**] secret_array = $([System.Text.Encoding]::Unicode.GetChars($SecretBytes))"
+    Write-Debug "[**] char_array = $([System.Text.Encoding]::Unicode.GetChars($CharBytes))"
+    For ($i=0; $i -lt $CharBytes.Length; $i++) {
+        $Bytes[$i] = ($CharBytes[$i]) -bxor ($SecretBytes[($i%$SecretBytes.Length)])
     }
-    $xor = [System.Text.Encoding]::Unicode.GetChars($bytes)
-    Write-Output "[XOR] Encoded `"$Message`" to `"$xor`""
-
-    For ($i=0; $i -lt $msg_length; $i++) {
-        $bytes[$i] = ($secret_bytes[($i%$secret_bytes.Length)]) -bxor ($xor[$i])
-    }
-    $result = [System.Text.Encoding]::Unicode.GetChars($bytes)
-    Write-Output "[XOR] Decoding `"$xor`" to `"$result`""
+    $Encrypted = [System.Text.Encoding]::Unicode.GetChars($Bytes)
+    Write-Verbose "[XOR] Encrypted `"$Message`" to `"$Encrypted`""
+    Write-Output $Encrypted
 }
