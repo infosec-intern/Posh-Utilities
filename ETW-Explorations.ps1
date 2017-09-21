@@ -11,4 +11,6 @@ Param()
     https://github.com/infosec-intern/Posh-Utilities/
     https://support.microsoft.com/en-us/help/2593157/event-tracing-for-windows-etw-simplified
     https://msdn.microsoft.com/en-us/library/windows/desktop/bb968803(v=vs.85).aspx
-#>
+    https://www.fireeye.com/blog/threat-research/2017/09/pywintrace-python-wrapper-for-etw.html
+    https://blogs.msdn.microsoft.com/ntdebugging/2009/09/08/part-2-exploring-and-decoding-etw-providers-using-event-log-channels/
+    #>
