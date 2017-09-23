@@ -17,6 +17,8 @@
     Save the contents of a particular script to a designated folder. Requires the full name specified including extension
 .PARAMETER OutFolder
     Folder to save scripts to. Default is the current one
+.PARAMETER Path
+    Path to an .evtx file to read
 .EXAMPLE
     .\Get-ScriptBlock.ps1
 
@@ -77,6 +79,17 @@
 
     Dump out all the named PowerShell scripts from the event logs. Any that appear in the default List mode will be passed as objects
     Note: I had to drop the ScriptPath field from the output so it would fit in one screen. However, that field is included in the output
+.EXAMPLE
+    .\Get-ScriptBlock.ps1 -List -Path ..\DeepBlueCLI\evtx\Powershell-Invoke-Obfuscation-many.evtx
+
+    ScriptPath                                                                               LastRunTime
+    ----------                                                                               -----------
+    C:\Users\student\Desktop\Invoke-Obfuscation-master\Out-SecureStringCommand.ps1           8/30/2017 1:12:09 PM
+    C:\Users\student\Desktop\DeepBlueCLI-master\DeepBlue-0.3.ps1                             8/30/2017 1:01:22 PM
+    C:\Users\student\Desktop\Invoke-Obfuscation-master\Out-EncodedBinaryCommand.ps1          8/30/2017 12:55:56 PM
+    C:\Users\student\Desktop\Invoke-Obfuscation-master\Out-EncodedHexCommand.ps1             8/30/2017 12:22:17 PM
+
+    Read the scriptblocks from a specific .evtx file instead of the computer's
 .LINK
     https://github.com/infosec-intern/Posh-Utilities/
     https://blogs.technet.microsoft.com/ashleymcglone/2013/08/28/powershell-get-winevent-xml-madness-getting-details-from-event-logs/
@@ -85,33 +98,43 @@
 [CmdletBinding(DefaultParameterSetName="List")]
 
 Param(
-    [Parameter()]
+    [Parameter(Mandatory=$false)]
     [string]$ComputerName = "$env:COMPUTERNAME",
-    [Parameter()]
+    [Parameter(Mandatory=$false)]
     [PSCredential]$Credential,
-    [Parameter(ParameterSetName="List")]
+    [Parameter(Mandatory=$false)]
+    [string]$Path,
+    [Parameter(ParameterSetName="List", Mandatory=$false)]
     [switch]$List,
-    [Parameter(ParameterSetName="List")]
-    [Parameter(ParameterSetName="Dump")]
+    [Parameter(ParameterSetName="List", Mandatory=$false)]
+    [Parameter(ParameterSetName="Dump", Mandatory=$false)]
     [switch]$NoName,
-    [Parameter(ParameterSetName="Dump")]
+    [Parameter(ParameterSetName="Dump", Mandatory=$false)]
     [switch]$Dump,
-    [Parameter(ParameterSetName="Script", ValueFromPipeline=$true)]
+    [Parameter(ParameterSetName="Script", ValueFromPipeline=$true, Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$ScriptName
 )
 
-If ($Credential) {
-    $Events = Get-WinEvent -ComputerName $ComputerName -Credential $Credential -FilterHashtable @{
+If ($Path) {
+    $Filter = @{
+        "Path"=$Path;
         "ProviderName"="Microsoft-Windows-PowerShell";
-        "Id"=4104
+        "Id"=4104;
     }
 }
 Else {
-    $Events = Get-WinEvent -ComputerName $ComputerName -FilterHashtable @{
+    $Filter = @{
         "ProviderName"="Microsoft-Windows-PowerShell";
-        "Id"=4104
+        "Id"=4104;
     }
+}
+
+If ($Credential) {
+    $Events = Get-WinEvent -ComputerName $ComputerName -Credential $Credential -FilterHashtable $Filter
+}
+Else {
+    $Events = Get-WinEvent -ComputerName $ComputerName -FilterHashtable $Filter
 }
 
 If ($PSCmdlet.ParameterSetName -eq "List") {
