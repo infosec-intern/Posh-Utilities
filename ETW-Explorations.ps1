@@ -14,6 +14,7 @@ Param()
     https://www.fireeye.com/blog/threat-research/2017/09/pywintrace-python-wrapper-for-etw.html
     https://blogs.msdn.microsoft.com/ntdebugging/2009/09/08/part-2-exploring-and-decoding-etw-providers-using-event-log-channels/
     https://technet.microsoft.com/en-us/library/dn168858.aspx
+    https://www.youtube.com/watch?v=VABMu05mYww
 #>
 $TraceSession = New-PefTraceSession -Mode Circular -SaveOnStop -Path "C:\Users\Thomas\Desktop\Trace.matu" -TotalSize 50
 $Trigger = New-PefTimeSpanTrigger -TimeSpan (New-TimeSpan -Seconds 10)
