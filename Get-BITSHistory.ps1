@@ -88,17 +88,12 @@ Function Get-BITSHistory {
                 3 {
                     Write-Verbose "Parseing StartJob -EventLog $($Event.Id)"
                     $Lines = $Event.Message.Split("`r`n")
-                    Write-Verbose $Event.Message
-                    # Transfer job: Push Notification Platform Job: 1
-                    # Job ID: {5149366E-F8D5-4C7B-A394-B0FF934BA85A}
-                    # Owner: anononabus\Thomas
-                    # Process Path: C:\Windows\System32\svchost.exe
-                    # Process ID: 1964
                     $Result = New-Object -TypeName PSObject -Property @{
-                        "JobId" = $Lines[2].Split(":")[1];
-                        "Owner" = $Lines[3].Split(":")[1];
-                        "ProcessPath" = $Lines[4].Split(":")[1];
-                        "ProcessId" = $Lines[5].Split(":")[1];
+                        "TransferJob" = $Lines[2].Replace("Transfer job: ", "");
+                        "JobId" = $Lines[4].Replace("Job ID: ", "");
+                        "Owner" = $Lines[6].Replace("Owner: ", "");
+                        "ProcessPath" = $Lines[8].Replace("Process Path: ", "");
+                        "ProcessId" = $Lines[10].Replace("Process ID: ", "");
                     }
                 }
                 4 {
