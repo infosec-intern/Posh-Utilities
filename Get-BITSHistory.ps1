@@ -94,9 +94,14 @@ Function Get-BITSHistory {
                 5 {
                     Write-Verbose "Parse-CancelledJob -EventLog $($Event.Id)"
                 }
-                # kind of a PITA - will have to investigate better methods
-                {($_ -eq 59) -or ($_ -eq 60) -or ($_ -eq 61)} {
-                    Write-Verbose "Parse-JobStatus -EventLog $($Event.Id)"
+                59 {
+                    Write-Verbose "Parse-StartURL -EventLog $($Event.Id)"
+                }
+                60 {
+                    Write-Verbose "Parse-StopURL -EventLog $($Event.Id)"
+                }
+                61 {
+                    Write-Verbose "Parse-ErrorURL -EventLog $($Event.Id)"
                 }
                 Default {
                     $Result = "I can't parse event ID $($Event.Id)"
