@@ -116,18 +116,13 @@ Param(
     [string]$ScriptName
 )
 
-If ($Path) {
-    $Filter = @{
-        "Path"=$Path;
-        "ProviderName"="Microsoft-Windows-PowerShell";
-        "Id"=4104;
-    }
+$Filter = @{
+    "ProviderName"="Microsoft-Windows-PowerShell";
+    "Id"=4104;
 }
-Else {
-    $Filter = @{
-        "ProviderName"="Microsoft-Windows-PowerShell";
-        "Id"=4104;
-    }
+
+If ($Path) {
+    $Filter.Add("Path", $Path)
 }
 
 If ($Credential) {
