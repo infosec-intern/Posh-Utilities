@@ -67,7 +67,8 @@ Function Get-BITSHistory {
         $Filter = @{
             "ProviderName"=$ProviderName;
             "LogName"=$LogName;
-            "Id"=3#,4,5,59,60,61;
+            # "Id"=3,4,5,59,60,61;
+            "Id"=5;
         }
 
         If ($Path) {
@@ -86,30 +87,63 @@ Function Get-BITSHistory {
         ForEach ($Event in $Events) {
             switch ($Event.Id) {
                 3 {
-                    Write-Verbose "Parseing StartJob -EventLog $($Event.Id)"
-                    $Lines = $Event.Message.Split("`r`n")
+                    Write-Verbose "Parsing StartJob -EventLog $($Event.Id)"
+                    $Message = $Event.Message.Split("`r`n")
                     $Result = New-Object -TypeName PSObject -Property @{
-                        "TransferJob" = $Lines[2].Replace("Transfer job: ", "");
-                        "JobId" = $Lines[4].Replace("Job ID: ", "");
-                        "Owner" = $Lines[6].Replace("Owner: ", "");
-                        "ProcessPath" = $Lines[8].Replace("Process Path: ", "");
-                        "ProcessId" = $Lines[10].Replace("Process ID: ", "");
+                        "TransferJob" = $Message[2].Replace("Transfer job: ", "");
+                        "JobId" = $Message[4].Replace("Job ID: ", "");
+                        "Owner" = $Message[6].Replace("Owner: ", "");
+                        "ProcessPath" = $Message[8].Replace("Process Path: ", "");
+                        "ProcessId" = $Message[10].Replace("Process ID: ", "");
                     }
                 }
                 4 {
-                    Write-Verbose "Parseing CompletedJob -EventLog $($Event.Id)"
+                    Write-Verbose "Parsing CompletedJob -EventLog $($Event.Id)"
+                    $Message = $Event.Message.Split("`r`n")
+                    Write-Debug $Event.Message
+                    $Result = New-Object -TypeName PSObject -Property @{
+                        "User" = $Message[2].Replace("User: ", "");
+                        "TransferJob" = $Message[4].Replace("Transfer job: ", "");
+                        "JobId" = $Message[6].Replace("Job ID: ", "");
+                        "Owner" = $Message[8].Replace("Owner: ", "");
+                        "FileCount" = $Message[10].Replace("File count: ", "");
+                    }
                 }
                 5 {
-                    Write-Verbose "Parseing CancelledJob -EventLog $($Event.Id)"
+                    Write-Verbose "Parsing CancelledJob -EventLog $($Event.Id)"
+                    $Message = $Event.Message.Split("`r`n")
+                    Write-Debug $Event.Message
+                    Write-Debug "$Message"
+                    # $Result = New-Object -TypeName PSObject -Property @{
+
+                    # }
                 }
                 59 {
-                    Write-Verbose "Parseing StartURL -EventLog $($Event.Id)"
+                    Write-Verbose "Parsing StartURL -EventLog $($Event.Id)"
+                    $Message = $Event.Message.Split("`r`n")
+                    Write-Debug $Event.Message
+                    Write-Debug "$Message"
+                    # $Result = New-Object -TypeName PSObject -Property @{
+
+                    # }
                 }
                 60 {
-                    Write-Verbose "Parseing StopURL -EventLog $($Event.Id)"
+                    Write-Verbose "Parsing StopURL -EventLog $($Event.Id)"
+                    $Message = $Event.Message.Split("`r`n")
+                    Write-Debug $Event.Message
+                    Write-Debug "$Message"
+                    # $Result = New-Object -TypeName PSObject -Property @{
+
+                    # }
                 }
                 61 {
-                    Write-Verbose "Parseing ErrorURL -EventLog $($Event.Id)"
+                    Write-Verbose "Parsing ErrorURL -EventLog $($Event.Id)"
+                    $Message = $Event.Message.Split("`r`n")
+                    Write-Debug $Event.Message
+                    Write-Debug "$Message"
+                    # $Result = New-Object -TypeName PSObject -Property @{
+
+                    # }
                 }
                 Default {
                     $Result = "I can't parse event ID $($Event.Id)"
