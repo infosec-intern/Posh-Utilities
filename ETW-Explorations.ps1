@@ -16,8 +16,19 @@ Param()
     https://technet.microsoft.com/en-us/library/dn168858.aspx
     https://www.youtube.com/watch?v=VABMu05mYww
 #>
-$TraceSession = New-PefTraceSession -Mode Circular -SaveOnStop -Path "C:\Users\Thomas\Desktop\Trace.matu" -TotalSize 50
-$Trigger = New-PefTimeSpanTrigger -TimeSpan (New-TimeSpan -Seconds 10)
-Set-PefTraceFilter -PEFSession $TraceSession -Trigger $Trigger
-Add-PefMessageSource -PEFSession $TraceSession -Source "Microsoft-Pef-WFP-MessageProvider"
-Start-PefTraceSession -PEFSession $TraceSession
+
+$TargetProvider = "Microsoft-Windows-PowerShell"
+$EventID = 7937
+$Field = "ContextInfo"
+
+# 1. Create a trace session
+# 2. Register one or more providers with the trace session
+# 3. For each provider, set the appropriate "any" and "all" flags
+# 4. Register a callback
+# 5. Start the trace session
+# 6. Process events (indefinitely)
+    # 6.1. receive event
+    # 6.2. get the schema for the event
+    # 6.3. parse out the data field of the event you are interested in based on the schema from (2)
+# 7. Stop the trace session
+
