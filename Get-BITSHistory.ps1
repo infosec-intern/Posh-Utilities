@@ -68,7 +68,7 @@ Function Get-BITSHistory {
             "ProviderName"=$ProviderName;
             "LogName"=$LogName;
             # "Id"=3,4,5,59,60,61;
-            "Id"=5;
+            "Id"=59;
         }
 
         If ($Path) {
@@ -84,69 +84,29 @@ Function Get-BITSHistory {
     }
     PROCESS {
         $Results = @()
-        ForEach ($Event in $Events) {
+        ForEach ($Record in $Events) {
+            $Event = ([xml]$Record.ToXML()).Event.EventData.Data
             switch ($Event.Id) {
                 3 {
                     Write-Verbose "Parsing StartJob -EventLog $($Event.Id)"
-                    $Message = $Event.Message.Split("`r`n")
-                    $Result = New-Object -TypeName PSObject -Property @{
-                        "TransferJob" = $Message[2].Replace("Transfer job: ", "");
-                        "JobId" = $Message[4].Replace("Job ID: ", "");
-                        "Owner" = $Message[6].Replace("Owner: ", "");
-                        "ProcessPath" = $Message[8].Replace("Process Path: ", "");
-                        "ProcessId" = $Message[10].Replace("Process ID: ", "");
-                    }
                 }
                 4 {
                     Write-Verbose "Parsing CompletedJob -EventLog $($Event.Id)"
-                    $Message = $Event.Message.Split("`r`n")
-                    Write-Debug $Event.Message
-                    $Result = New-Object -TypeName PSObject -Property @{
-                        "User" = $Message[2].Replace("User: ", "");
-                        "TransferJob" = $Message[4].Replace("Transfer job: ", "");
-                        "JobId" = $Message[6].Replace("Job ID: ", "");
-                        "Owner" = $Message[8].Replace("Owner: ", "");
-                        "FileCount" = $Message[10].Replace("File count: ", "");
-                    }
                 }
                 5 {
                     Write-Verbose "Parsing CancelledJob -EventLog $($Event.Id)"
-                    $Message = $Event.Message.Split("`r`n")
-                    Write-Debug $Event.Message
-                    Write-Debug "$Message"
-                    # $Result = New-Object -TypeName PSObject -Property @{
-
-                    # }
                 }
                 59 {
                     Write-Verbose "Parsing StartURL -EventLog $($Event.Id)"
-                    $Message = $Event.Message.Split("`r`n")
-                    Write-Debug $Event.Message
-                    Write-Debug "$Message"
-                    # $Result = New-Object -TypeName PSObject -Property @{
-
-                    # }
                 }
                 60 {
                     Write-Verbose "Parsing StopURL -EventLog $($Event.Id)"
-                    $Message = $Event.Message.Split("`r`n")
-                    Write-Debug $Event.Message
-                    Write-Debug "$Message"
-                    # $Result = New-Object -TypeName PSObject -Property @{
-
-                    # }
                 }
                 61 {
                     Write-Verbose "Parsing ErrorURL -EventLog $($Event.Id)"
-                    $Message = $Event.Message.Split("`r`n")
-                    Write-Debug $Event.Message
-                    Write-Debug "$Message"
-                    # $Result = New-Object -TypeName PSObject -Property @{
-
-                    # }
                 }
                 Default {
-                    $Result = "I can't parse event ID $($Event.Id)"
+                    $Result = "I can't parse event ID $($Record.Id)"
                 }
             }
             $Results += $Result
