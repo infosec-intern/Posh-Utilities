@@ -67,7 +67,7 @@ Function Get-BITSHistory {
         $Filter = @{
             "ProviderName"=$ProviderName;
             "LogName"=$LogName;
-            "Id"=3,4,5,59,60,61;
+            "Id"=3#,4,5,59,60,61;
         }
 
         If ($Path) {
@@ -86,28 +86,41 @@ Function Get-BITSHistory {
         ForEach ($Event in $Events) {
             switch ($Event.Id) {
                 3 {
-                    Write-Verbose "Parse-StartJob -EventLog $($Event.Id)"
+                    Write-Verbose "Parseing StartJob -EventLog $($Event.Id)"
+                    $Lines = $Event.Message.Split("`r`n")
+                    Write-Verbose $Event.Message
+                    # Transfer job: Push Notification Platform Job: 1
+                    # Job ID: {5149366E-F8D5-4C7B-A394-B0FF934BA85A}
+                    # Owner: anononabus\Thomas
+                    # Process Path: C:\Windows\System32\svchost.exe
+                    # Process ID: 1964
+                    $Result = New-Object -TypeName PSObject -Property @{
+                        "JobId" = $Lines[2].Split(":")[1];
+                        "Owner" = $Lines[3].Split(":")[1];
+                        "ProcessPath" = $Lines[4].Split(":")[1];
+                        "ProcessId" = $Lines[5].Split(":")[1];
+                    }
                 }
                 4 {
-                    Write-Verbose "Parse-CompletedJob -EventLog $($Event.Id)"
+                    Write-Verbose "Parseing CompletedJob -EventLog $($Event.Id)"
                 }
                 5 {
-                    Write-Verbose "Parse-CancelledJob -EventLog $($Event.Id)"
+                    Write-Verbose "Parseing CancelledJob -EventLog $($Event.Id)"
                 }
                 59 {
-                    Write-Verbose "Parse-StartURL -EventLog $($Event.Id)"
+                    Write-Verbose "Parseing StartURL -EventLog $($Event.Id)"
                 }
                 60 {
-                    Write-Verbose "Parse-StopURL -EventLog $($Event.Id)"
+                    Write-Verbose "Parseing StopURL -EventLog $($Event.Id)"
                 }
                 61 {
-                    Write-Verbose "Parse-ErrorURL -EventLog $($Event.Id)"
+                    Write-Verbose "Parseing ErrorURL -EventLog $($Event.Id)"
                 }
                 Default {
                     $Result = "I can't parse event ID $($Event.Id)"
                 }
             }
-            $Results.Add($Result)
+            $Results += $Result
         }
     }
     END {
