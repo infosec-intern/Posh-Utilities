@@ -202,7 +202,7 @@ Function Get-BITSHistory {
         }
     }
     END {
-        # display back to the user in the form requested
+        # send raw objects back through the pipeline
         Write-Output $Jobs.Values
     }
 }
