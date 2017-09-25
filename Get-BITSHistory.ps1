@@ -99,12 +99,9 @@ Function Get-BITSHistory {
     BEGIN {
         # set up allthethings
         $Jobs = @{}
-        $ProviderName = "Microsoft-Windows-Bits-Client"
-        $LogName = "Microsoft-Windows-Bits-Client/Operational"
-
         $Filter = @{
-            "ProviderName"=$ProviderName;
-            "LogName"=$LogName;
+            "ProviderName"="Microsoft-Windows-Bits-Client";
+            "LogName"="Microsoft-Windows-Bits-Client/Operational";
             "Id"=3,4,5,59,60,61;
         }
 
@@ -122,9 +119,9 @@ Function Get-BITSHistory {
     PROCESS {
         ForEach ($Event in $Events) {
             $Record = ([xml]$Event.ToXML()).Event.EventData.Data
-            switch ($Event.Id) {
+            Switch ($Event.Id) {
                 3 {
-                    Write-Verbose "Parsing StartJob -EventLog $($Event.Id)"
+                    Write-Verbose -Message "Parsing StartJob -EventLog $($Event.Id)"
                     $JobId = $Record[1].'#text'
                     $Jobs[$JobId] = New-Object -TypeName PSObject -Property @{
                         "Name" = $Record[0].'#text';
@@ -136,14 +133,14 @@ Function Get-BITSHistory {
                     }
                 }
                 4 {
-                    Write-Verbose "Parsing CompletedJob -EventLog $($Event.Id)"
+                    Write-Verbose -Message "Parsing CompletedJob -EventLog $($Event.Id)"
                     $JobId = $Record[2].'#text'
                     If ($Jobs.Count -le 0) { break }
                     $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "ByteTransferred" -Value $Record[5].'#text' -Force -ErrorAction SilentlyContinue
                     $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "EndTime" -Value $Event.TimeCreated -Force -ErrorAction SilentlyContinue
                 }
                 5 {
-                    Write-Verbose "Parsing CancelledJob -EventLog $($Event.Id)"
+                    Write-Verbose -Message "Parsing CancelledJob -EventLog $($Event.Id)"
                     $JobId = $Record[2].'#text'
                     If ($Jobs.Count -le 0) {
                         $Jobs[$JobId] = New-Object -TypeName PSObject -Property @{
@@ -156,7 +153,7 @@ Function Get-BITSHistory {
                     $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "User" -Value $Record[0].'#text' -Force -ErrorAction SilentlyContinue
                 }
                 59 {
-                    Write-Verbose "Parsing StartURL -EventLog $($Event.Id)"
+                    Write-Verbose -Message "Parsing StartURL -EventLog $($Event.Id)"
                     $JobId = $Record[2].'#text'
                     If ($Jobs.Count -le 0) {
                         # if we encounter this situation it means the event logs rolled off in the middle of a BITS job
@@ -170,7 +167,7 @@ Function Get-BITSHistory {
                     $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "BytesTotal" -Value $Record[7].'#text' -Force -ErrorAction SilentlyContinue
                 }
                 60 {
-                    Write-Verbose "Parsing StopURL -EventLog $($Event.Id)"
+                    Write-Verbose -Message "Parsing StopURL -EventLog $($Event.Id)"
                     $JobId = $Record[2].'#text'
                     If ($Jobs.Count -le 0) {
                         $Jobs[$JobId] = New-Object -TypeName PSObject -Property @{
@@ -203,6 +200,6 @@ Function Get-BITSHistory {
     }
     END {
         # send raw objects back through the pipeline
-        Write-Output $Jobs.Values
+        Write-Output -InputObject $Jobs.Values
     }
 }
