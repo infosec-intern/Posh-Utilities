@@ -61,14 +61,14 @@ Function Get-BITSHistory {
     )
     BEGIN {
         # set up allthethings
+        $Jobs = @{}
         $ProviderName = "Microsoft-Windows-Bits-Client"
         $LogName = "Microsoft-Windows-Bits-Client/Operational"
 
         $Filter = @{
             "ProviderName"=$ProviderName;
             "LogName"=$LogName;
-            # "Id"=3,4,5,59,60,61;
-            "Id"=59;
+            "Id"=3,4,5,59,60,61;
         }
 
         If ($Path) {
@@ -76,44 +76,70 @@ Function Get-BITSHistory {
         }
 
         If ($Credential) {
-            $Events = Get-WinEvent -ComputerName $ComputerName -Credential $Credential -FilterHashtable $Filter
+            $Events = Get-WinEvent -Oldest -ComputerName $ComputerName -Credential $Credential -FilterHashtable $Filter
         }
         Else {
-            $Events = Get-WinEvent -ComputerName $ComputerName -FilterHashtable $Filter
+            $Events = Get-WinEvent -Oldest -ComputerName $ComputerName -FilterHashtable $Filter
         }
     }
     PROCESS {
-        $Results = @()
-        ForEach ($Record in $Events) {
-            $Event = ([xml]$Record.ToXML()).Event.EventData.Data
+        ForEach ($Event in $Events) {
+            $Record = ([xml]$Event.ToXML()).Event.EventData.Data
             switch ($Event.Id) {
                 3 {
                     Write-Verbose "Parsing StartJob -EventLog $($Event.Id)"
+                    $JobId = $Record[1].'#text'
+                    $Jobs[$JobId] = New-Object -TypeName PSObject -Property @{
+                        "Name" = $Record[0].'#text';
+                        "Id" = $JobId;
+                        "Owner" = $Record[2].'#text';
+                        "ProcessPath" = $Record[3].'#text';
+                        "ProcessId" = $Record[4].'#text';
+                        "StartTime" = $Event.TimeCreated
+                    }
                 }
                 4 {
                     Write-Verbose "Parsing CompletedJob -EventLog $($Event.Id)"
+                    If ($Jobs.Count -le 0) { break }
                 }
                 5 {
                     Write-Verbose "Parsing CancelledJob -EventLog $($Event.Id)"
+                    If ($Jobs.Count -le 0) { break }
                 }
                 59 {
                     Write-Verbose "Parsing StartURL -EventLog $($Event.Id)"
+                    $JobId = $Record[2].'#text'
+                    If ($Jobs.Count -le 0) {
+                        # if we encounter this situation it means the event logs rolled off in the middle of a BITS job
+                        # we need to create a minimalist job and fill in what we know
+                        $Jobs[$JobId] = New-Object -TypeName PSObject -Property @{
+                            "Name" = $Record[1].'#text';
+                            "Id" = $JobId;
+                            "Owner" = "???";
+                            "ProcessPath" = "???";
+                            "ProcessId" = "???";
+                            "StartTime" = "???";
+                        }
+                    }
+                    $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "URL" -Value $Record[3].'#text' -Force -ErrorAction SilentlyContinue
+                    $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "BytesTotal" -Value $Record[7].'#text' -Force -ErrorAction SilentlyContinue
                 }
                 60 {
                     Write-Verbose "Parsing StopURL -EventLog $($Event.Id)"
+                    If ($Jobs.Count -le 0) { break }
                 }
                 61 {
                     Write-Verbose "Parsing ErrorURL -EventLog $($Event.Id)"
+                    If ($Jobs.Count -le 0) { break }
                 }
                 Default {
-                    $Result = "I can't parse event ID $($Record.Id)"
+                    $Result = "I can't parse event ID $($Event.Id)"
                 }
             }
-            $Results += $Result
         }
     }
     END {
         # display back to the user in the form requested
-        Write-Output $Results
+        Write-Output $Jobs.Values
     }
 }
