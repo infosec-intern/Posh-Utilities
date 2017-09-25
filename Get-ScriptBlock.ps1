@@ -20,7 +20,7 @@
 .PARAMETER Path
     Path to an .evtx file to read
 .EXAMPLE
-    .\Get-ScriptBlock.ps1
+    Get-ScriptBlock
 
     ScriptPath                                                      LastRunTime
     ----------                                                      -----------
@@ -31,7 +31,7 @@
 
     Simply running the scripts runs the "List" mode by default, where the named scripts in your logs are displayed alongside the last time each one was run. This output is an array of PSObjects, so you can sort and filter them just like any other collection of objects in PowerShell
 .EXAMPLE
-    .\Get-ScriptBlock.ps1 -List -NoName
+    Get-ScriptBlock -List -NoName
 
     ScriptPath                                                      LastRunTime
     ----------                                                      -----------
@@ -46,7 +46,7 @@
 
     Running the script in List mode along with the "NoName" parameter lists any scripts in your logs that don't have a ScriptPath associated with them. These scripts are listed instead by their unique ScriptBlockId, which can then be used to look up their contents directly in the event logs
 .EXAMPLE
-    .\Get-ScriptBlock.ps1 -ScriptName CL_Utility.ps1
+    Get-ScriptBlock -ScriptName CL_Utility.ps1
 
     ScriptPath    : C:\WINDOWS\TEMP\SDIAG_b0680a0b-4cad-49d2-a02d-546c3320f157\CL_Utility.ps1
     ScriptName    : CL_Utility.ps1
@@ -68,7 +68,7 @@
 
     Search the event logs for a specific script name. The script name must match exactly, no regular expression syntax or substrings allowed (for now :))
 .EXAMPLE
-    .\Get-ScriptBlock.ps1 -Dump | Select lastruntime,messagetotal,scriptblockid,scriptname,text | Format-Table
+    Get-ScriptBlock -Dump | Select lastruntime,messagetotal,scriptblockid,scriptname,text | Format-Table
 
     LastRunTime           MessageTotal ScriptBlockId                        ScriptName                           Text
     -----------           ------------ -------------                        ----------                           ----
@@ -80,7 +80,7 @@
     Dump out all the named PowerShell scripts from the event logs. Any that appear in the default List mode will be passed as objects
     Note: I had to drop the ScriptPath field from the output so it would fit in one screen. However, that field is included in the output
 .EXAMPLE
-    .\Get-ScriptBlock.ps1 -List -Path ..\DeepBlueCLI\evtx\Powershell-Invoke-Obfuscation-many.evtx
+    Get-ScriptBlock -List -Path ..\DeepBlueCLI\evtx\Powershell-Invoke-Obfuscation-many.evtx
 
     ScriptPath                                                                               LastRunTime
     ----------                                                                               -----------
@@ -95,135 +95,138 @@
     https://blogs.technet.microsoft.com/ashleymcglone/2013/08/28/powershell-get-winevent-xml-madness-getting-details-from-event-logs/
     https://stackoverflow.com/questions/7760013/why-does-continue-behave-like-break-in-a-foreach-object
 #>
-[CmdletBinding(DefaultParameterSetName="List")]
+Function Get-ScriptBlock {
+    [CmdletBinding(DefaultParameterSetName="List")]
 
-Param(
-    [Parameter(Mandatory=$false)]
-    [string]$ComputerName = "$env:COMPUTERNAME",
-    [Parameter(Mandatory=$false)]
-    [PSCredential]$Credential,
-    [Parameter(Mandatory=$false)]
-    [string]$Path,
-    [Parameter(ParameterSetName="List", Mandatory=$false)]
-    [switch]$List,
-    [Parameter(ParameterSetName="List", Mandatory=$false)]
-    [Parameter(ParameterSetName="Dump", Mandatory=$false)]
-    [switch]$NoName,
-    [Parameter(ParameterSetName="Dump", Mandatory=$false)]
-    [switch]$Dump,
-    [Parameter(ParameterSetName="Script", ValueFromPipeline=$true, Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$ScriptName
-)
-
-$Filter = @{
-    "ProviderName"="Microsoft-Windows-PowerShell";
-    "Id"=4104;
-}
-
-If ($Path) {
-    $Filter.Add("Path", $Path)
-}
-
-If ($Credential) {
-    $Events = Get-WinEvent -ComputerName $ComputerName -Credential $Credential -FilterHashtable $Filter
-}
-Else {
-    $Events = Get-WinEvent -ComputerName $ComputerName -FilterHashtable $Filter
-}
-
-If ($PSCmdlet.ParameterSetName -eq "List") {
-    Write-Verbose -Message "Listing all PowerShell scriptblocks run and their last-run times"
-    $Scripts = @()
-    $Events | ForEach-Object {
-        $EventXML = [xml]$_.ToXML()
-        $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
-        # set the ScriptBlockId as path so the user can correlate it in the event logs if she chooses
-        If ($ScriptPath -eq $null) {
-            If ($NoName) {
-                $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
-                $ScriptPath = $ScriptBlockId
-            }
-            Else {
-                return
-            }
+    Param(
+        [Parameter(Mandatory=$false)]
+        [string]$ComputerName = "$env:COMPUTERNAME",
+        [Parameter(Mandatory=$false)]
+        [PSCredential]$Credential,
+        [Parameter(Mandatory=$false)]
+        [string]$Path,
+        [Parameter(ParameterSetName="List", Mandatory=$false)]
+        [switch]$List,
+        [Parameter(ParameterSetName="List", Mandatory=$false)]
+        [Parameter(ParameterSetName="Dump", Mandatory=$false)]
+        [switch]$NoName,
+        [Parameter(ParameterSetName="Dump", Mandatory=$false)]
+        [switch]$Dump,
+        [Parameter(ParameterSetName="Script", ValueFromPipeline=$true, Mandatory=$false)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ScriptName
+    )
+    BEGIN {
+        $Scripts = @()
+        $Filter = @{
+            "ProviderName"="Microsoft-Windows-PowerShell";
+            "Id"=4104;
         }
-        If (($Scripts).ScriptPath -notcontains $ScriptPath) {
-            $NewScript = New-Object psobject
-            $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
-            $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
-            $Scripts += $NewScript
+
+        If ($Path) {
+            $Filter.Add("Path", $Path)
+        }
+
+        If ($Credential) {
+            $Events = Get-WinEvent -ComputerName $ComputerName -Credential $Credential -FilterHashtable $Filter
+        }
+        Else {
+            $Events = Get-WinEvent -ComputerName $ComputerName -FilterHashtable $Filter
         }
     }
-}
-ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
-    $Scripts = @()
-    Write-Verbose -Message "Searching event logs for '$ScriptName'"
-    # Since scriptblock text is written in reverse in event logs, need to store blocks at once then write them out at the end
-    $TempScriptBlockText = ""
-    $Events | ForEach-Object {
-        $EventXML = [xml]$_.ToXML()
-        $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
-        If ($ScriptPath -eq $null) {
-            # ScriptName requires a value in ScriptPath, so we know these empty ones can be skipped
-            return
-        }
-        If ($(Split-Path -Leaf $ScriptPath) -eq $ScriptName) {
-            $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
-            $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
-            $ScriptBlockText += $TempScriptBlockText
-            $TempScriptBlockText = $ScriptBlockText
-            If ($MessageNumber -eq 1) {
-                $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
-                $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
-                # Completely break out of the ForEach-Object pipeline when the script has been found
-                $NewScript = New-Object psobject
-                $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
-                $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptName" -Value $(Split-Path -Leaf $ScriptPath)
-                $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
-                $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptBlockId" -Value $ScriptBlockId
-                $NewScript | Add-Member -MemberType NoteProperty -Name "MessageTotal" -Value $MessageTotal
-                $NewScript | Add-Member -MemberType NoteProperty -Name "Text" -Value $ScriptBlockText
-                $Scripts += $NewScript
+    PROCESS {
+        If ($PSCmdlet.ParameterSetName -eq "List") {
+            Write-Verbose -Message "Listing all PowerShell scriptblocks run and their last-run times"
+            $Events | ForEach-Object {
+                $EventXML = [xml]$_.ToXML()
+                $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
+                # set the ScriptBlockId as path so the user can correlate it in the event logs if she chooses
+                If ($ScriptPath -eq $null) {
+                    If ($NoName) {
+                        $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
+                        $ScriptPath = $ScriptBlockId
+                    }
+                    Else {
+                        return
+                    }
+                }
+                If (($Scripts).ScriptPath -notcontains $ScriptPath) {
+                    $NewScript = New-Object psobject
+                    $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
+                    $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
+                    $Scripts += $NewScript
+                }
             }
         }
-    }
-}
-ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
-    Write-Verbose -Message "Dumping out all unique PowerShell scripts from event logs"
-    $Scripts = @()
-    $TempScriptBlockText = ""
-    $Events | ForEach-Object {
-        $EventXML = [xml]$_.ToXML()
-        $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
-        $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
-        $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
-        If ($ScriptPath -eq $null) {
-            If ($NoName) {
-                # If no scriptpath exists, write it out using the block id to keep each unique
-                $ScriptPath = "$ScriptBlockId.ps1"
-            }
-            Else {
-                # Assume the user doesn't want to see null-path scripts by default
-                return
-            }
-        }
-        $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
-        $ScriptBlockText += $TempScriptBlockText
-        $TempScriptBlockText = $ScriptBlockText
-        If ($MessageNumber -eq 1) {
-            $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
-            $NewScript = New-Object psobject
-            $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
-            $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptName" -Value $(Split-Path -Leaf $ScriptPath)
-            $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
-            $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptBlockId" -Value $ScriptBlockId
-            $NewScript | Add-Member -MemberType NoteProperty -Name "MessageTotal" -Value $MessageTotal
-            $NewScript | Add-Member -MemberType NoteProperty -Name "Text" -Value $ScriptBlockText
-            $Scripts += $NewScript
+        ElseIf ($PsCmdlet.ParameterSetName -eq "Script") {
+            Write-Verbose -Message "Searching event logs for '$ScriptName'"
+            # Since scriptblock text is written in reverse in event logs, need to store blocks at once then write them out at the end
             $TempScriptBlockText = ""
+            $Events | ForEach-Object {
+                $EventXML = [xml]$_.ToXML()
+                $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
+                If ($ScriptPath -eq $null) {
+                    # ScriptName requires a value in ScriptPath, so we know these empty ones can be skipped
+                    return
+                }
+                If ($(Split-Path -Leaf $ScriptPath) -eq $ScriptName) {
+                    $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
+                    $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
+                    $ScriptBlockText += $TempScriptBlockText
+                    $TempScriptBlockText = $ScriptBlockText
+                    If ($MessageNumber -eq 1) {
+                        $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
+                        $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
+                        # Completely break out of the ForEach-Object pipeline when the script has been found
+                        $NewScript = New-Object psobject
+                        $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
+                        $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptName" -Value $(Split-Path -Leaf $ScriptPath)
+                        $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
+                        $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptBlockId" -Value $ScriptBlockId
+                        $NewScript | Add-Member -MemberType NoteProperty -Name "MessageTotal" -Value $MessageTotal
+                        $NewScript | Add-Member -MemberType NoteProperty -Name "Text" -Value $ScriptBlockText
+                        $Scripts += $NewScript
+                    }
+                }
+            }
+        }
+        ElseIf ($PsCmdlet.ParameterSetName -eq "Dump") {
+            Write-Verbose -Message "Dumping out all unique PowerShell scripts from event logs"
+            $TempScriptBlockText = ""
+            $Events | ForEach-Object {
+                $EventXML = [xml]$_.ToXML()
+                $MessageNumber = $EventXML.Event.EventData.Data[0].'#text'
+                $ScriptBlockId = $EventXML.Event.EventData.Data[3].'#text'
+                $ScriptPath = $EventXML.Event.EventData.Data[4].'#text'
+                If ($ScriptPath -eq $null) {
+                    If ($NoName) {
+                        # If no scriptpath exists, write it out using the block id to keep each unique
+                        $ScriptPath = "$ScriptBlockId.ps1"
+                    }
+                    Else {
+                        # Assume the user doesn't want to see null-path scripts by default
+                        return
+                    }
+                }
+                $ScriptBlockText = $EventXML.Event.EventData.Data[2].'#text'
+                $ScriptBlockText += $TempScriptBlockText
+                $TempScriptBlockText = $ScriptBlockText
+                If ($MessageNumber -eq 1) {
+                    $MessageTotal = $EventXML.Event.EventData.Data[1].'#text'
+                    $NewScript = New-Object psobject
+                    $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptPath" -Value $ScriptPath
+                    $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptName" -Value $(Split-Path -Leaf $ScriptPath)
+                    $NewScript | Add-Member -MemberType NoteProperty -Name "LastRunTime" -Value $_.TimeCreated
+                    $NewScript | Add-Member -MemberType NoteProperty -Name "ScriptBlockId" -Value $ScriptBlockId
+                    $NewScript | Add-Member -MemberType NoteProperty -Name "MessageTotal" -Value $MessageTotal
+                    $NewScript | Add-Member -MemberType NoteProperty -Name "Text" -Value $ScriptBlockText
+                    $Scripts += $NewScript
+                    $TempScriptBlockText = ""
+                }
+            }
         }
     }
+    END {
+        Write-Output -InputObject $Scripts
+    }
 }
-
-Write-Output -InputObject $Scripts
