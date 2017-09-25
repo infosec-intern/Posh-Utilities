@@ -12,9 +12,46 @@
 .PARAMETER List
     List the BITS sessions and their actions (cancelled, completed, ongoing, etc.)
 .EXAMPLE
-    Get-BITSHistory
+    (Get-BITSHistory | Measure-Object).Count
+
+    200
+
+
+    Count the number of BITS jobs that have been logged by the Windows Event Log
+
 .EXAMPLE
-    Get-BITSHistory -Path "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Bits-Client%4Operational.evtx"
+    Get-BITSHistory -Path "C:\Windows\System32\winevt\Logs\Microsoft-Windows-Bits-Client%4Operational.evtx" | Select-Object -First 1
+
+    Id              : {2ABEF5DC-81A6-49F0-B314-D324D31A75D1}
+    Name            : Push Notification Platform Job: 1
+    Owner           : computer\Username
+    ProcessPath     : C:\Windows\System32\svchost.exe
+    StartTime       : 9/16/2017 4:25:47 PM
+    ProcessId       : 1964
+    URL             : http://img-s-msn-com.akamaized.net/tenant/amp/entityid/AArXcnF.img?w=204&h=100&m=6&tilesize=wide&x=620&y=148&ms-scale=150&ms-contrast=standard
+    BytesTotal      : 15552
+    StatusCode      : 0
+    ByteTransferred : 15552
+    EndTime         : 9/16/2017 4:25:47 PM
+
+
+    Print the first BITS job in the specified .evtx file
+    **Note**: Due to the way PowerShell pipelining works, this still parses all BITS jobs out first
+
+.EXAMPLE
+    Get-BITSHistory | Where-Object { $_.StatusCode -ne 0 } | Select-Object Owner,ProcessPath,StartTime,EndTime,StatusCode | Format-Table
+
+    Owner                        ProcessPath                                                 StartTime             EndTime               StatusCode
+    -----                        -----------                                                 ---------             -------               ----------
+    NT AUTHORITY\NETWORK SERVICE C:\Windows\System32\svchost.exe                             9/8/2017 1:48:29 AM   9/8/2017 1:48:29 AM
+    computer\Username            C:\Windows\System32\svchost.exe                             9/15/2017 9:13:30 PM  9/15/2017 9:13:30 PM  2147954407
+    computer\Username            C:\Program Files (x86)\Google\Chrome\Application\chrome.exe 9/17/2017 12:01:10 PM 9/17/2017 3:18:01 PM  262152
+    computer\Username            C:\Windows\System32\svchost.exe                             9/15/2017 9:13:26 PM  9/15/2017 9:13:26 PM  2147954407
+    NT AUTHORITY\SYSTEM          C:\Program Files (x86)\Google\Update\GoogleUpdate.exe       9/12/2017 8:45:18 PM  9/12/2017 8:45:18 PM  2147954407
+
+
+    Get the BITS jobs that ended with an error
+
 .LINK
     https://github.com/infosec-intern/Posh-Utilities/
     Advanced Functions: https://technet.microsoft.com/en-us/library/hh413265.aspx
@@ -95,16 +132,28 @@ Function Get-BITSHistory {
                         "Owner" = $Record[2].'#text';
                         "ProcessPath" = $Record[3].'#text';
                         "ProcessId" = $Record[4].'#text';
-                        "StartTime" = $Event.TimeCreated
+                        "StartTime" = $Event.TimeCreated;
                     }
                 }
                 4 {
                     Write-Verbose "Parsing CompletedJob -EventLog $($Event.Id)"
+                    $JobId = $Record[2].'#text'
                     If ($Jobs.Count -le 0) { break }
+                    $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "ByteTransferred" -Value $Record[5].'#text' -Force -ErrorAction SilentlyContinue
+                    $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "EndTime" -Value $Event.TimeCreated -Force -ErrorAction SilentlyContinue
                 }
                 5 {
                     Write-Verbose "Parsing CancelledJob -EventLog $($Event.Id)"
-                    If ($Jobs.Count -le 0) { break }
+                    $JobId = $Record[2].'#text'
+                    If ($Jobs.Count -le 0) {
+                        $Jobs[$JobId] = New-Object -TypeName PSObject -Property @{
+                            "Name" = $Record[1].'#text';
+                            "Id" = $JobId;
+                            "Owner" = $Record[3].'#text';
+                        }
+                    }
+                    $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "EndTime" -Value $Event.TimeCreated -Force -ErrorAction SilentlyContinue
+                    $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "User" -Value $Record[0].'#text' -Force -ErrorAction SilentlyContinue
                 }
                 59 {
                     Write-Verbose "Parsing StartURL -EventLog $($Event.Id)"
@@ -115,10 +164,6 @@ Function Get-BITSHistory {
                         $Jobs[$JobId] = New-Object -TypeName PSObject -Property @{
                             "Name" = $Record[1].'#text';
                             "Id" = $JobId;
-                            "Owner" = "???";
-                            "ProcessPath" = "???";
-                            "ProcessId" = "???";
-                            "StartTime" = "???";
                         }
                     }
                     $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "URL" -Value $Record[3].'#text' -Force -ErrorAction SilentlyContinue
@@ -126,11 +171,29 @@ Function Get-BITSHistory {
                 }
                 60 {
                     Write-Verbose "Parsing StopURL -EventLog $($Event.Id)"
-                    If ($Jobs.Count -le 0) { break }
+                    $JobId = $Record[2].'#text'
+                    If ($Jobs.Count -le 0) {
+                        $Jobs[$JobId] = New-Object -TypeName PSObject -Property @{
+                            "Name" = $Record[1].'#text';
+                            "Id" = $JobId;
+                        }
+                    }
+                    $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "BytesTotal" -Value $Record[7].'#text' -Force -ErrorAction SilentlyContinue
+                    $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "StatusCode" -Value $Record[5].'#text' -Force -ErrorAction SilentlyContinue
+                    $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "EndTime" -Value $Event.TimeCreated -Force -ErrorAction SilentlyContinue
                 }
                 61 {
                     Write-Verbose "Parsing ErrorURL -EventLog $($Event.Id)"
-                    If ($Jobs.Count -le 0) { break }
+                    $JobId = $Record[2].'#text'
+                    If ($Jobs.Count -le 0) {
+                        $Jobs[$JobId] = New-Object -TypeName PSObject -Property @{
+                            "Name" = $Record[1].'#text';
+                            "Id" = $JobId;
+                        }
+                    }
+                    # Can't add any file properties..fileTime is MS Epoch, fileLength and fileTotal are 0xFFFFFFFFFFFFFFFF
+                    $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "StatusCode" -Value $Record[5].'#text' -Force -ErrorAction SilentlyContinue
+                    $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "EndTime" -Value $Event.TimeCreated -Force -ErrorAction SilentlyContinue
                 }
                 Default {
                     $Result = "I can't parse event ID $($Event.Id)"
