@@ -11,9 +11,11 @@ Param()
     Aliases: From, Input, Msg
 .EXAMPLE
     Invoke-Base64Encode -Message "Hello world"
+
     SABlAGwAbABvACAAdwBvAHIAbABkAA==
 .EXAMPLE
     echo "Hello world" | Invoke-Base64Encode
+
     SABlAGwAbABvACAAdwBvAHIAbABkAA==
 .LINK
     https://github.com/infosec-intern/Posh-Utilities/
@@ -44,9 +46,11 @@ Function Invoke-Base64Encode {
     Aliases: Encoded, From, Input, Msg
 .EXAMPLE
     Invoke-Base64Decode -Encoded "SABlAGwAbABvACAAdwBvAHIAbABkAA=="
+
     Hello World
 .EXAMPLE
     echo "Hello world" | Invoke-Base64Encode
+
     SABlAGwAbABvACAAdwBvAHIAbABkAA==
 .LINK
     https://github.com/infosec-intern/Posh-Utilities/
