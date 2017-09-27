@@ -193,7 +193,7 @@ Function Get-BITSHistory {
                     $Jobs[$JobId] | Add-Member -MemberType NoteProperty -Name "EndTime" -Value $Event.TimeCreated -Force -ErrorAction SilentlyContinue
                 }
                 Default {
-                    $Result = "I can't parse event ID $($Event.Id)"
+                    Write-Warning -Message "I can't parse event ID $($Event.Id)"
                 }
             }
         }
