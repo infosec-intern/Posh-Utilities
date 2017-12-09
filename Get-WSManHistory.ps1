@@ -35,7 +35,6 @@ Function Get-WSManHistory {
     )
     BEGIN {
         # set up allthethings
-        $Commands = @{}
         $Filter = @{
             "ProviderName"="Microsoft-Windows-WinRM";
             "LogName"="Microsoft-Windows-WinRM/Operational";
