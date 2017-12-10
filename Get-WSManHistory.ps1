@@ -86,17 +86,9 @@ Function Get-WSManHistory {
                     # Creating WSMan shell with the ResourceUri: http://schemas.microsoft.com/powershell/UTW and ShellId: EFE06CA1-17D2-40D6-A138-52CE7645116B
                     # command: Enter-PSSession -ComputerName century.underthewire.tech -UseSSL -port 6010 -configurationname UTW -Credential (Get-Credential)
                     # ShellTypes defined by resource URI: https://msdn.microsoft.com/en-us/library/aa384461(v=vs.85).aspx
-                    $ShellTypes = @{
-                        "http://schemas.microsoft.com/wbem/wsman/1/wmi" = "wmi";
-                        "http://schemas.microsoft.com/wbem/wsman/1/wmi/root/cimv2" = "wmicimv2";
-                        "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2" = "cimv2";
-                        "http://schemas.microsoft.com/wbem/wsman/1" = "winrm";
-                        "http://schemas.microsoft.com/wbem/wsman/1/windows/shell" = "shell";
-                        "http://schemas.microsoft.com/powershell/UTW" = "PowerShell";
-                    }
                     Write-Verbose -Message "Resource Shell Creation: $($Event.Id)"
                     $Uri = $Record[0].'#text'
-                    $Sessions[$SessionId] | Add-Member -MemberType NoteProperty -Name "ShellType" -Value $ShellTypes[$Uri] -Force -ErrorAction Ignore
+                    $Sessions[$SessionId] | Add-Member -MemberType NoteProperty -Name "ShellType" -Value $Uri -Force -ErrorAction Ignore
                 }
                 13 {
                     # Running WSMan command with CommandId: 2D9967F0-3EE4-47AC-90A7-2B91CEB82BC1
