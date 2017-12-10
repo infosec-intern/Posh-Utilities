@@ -38,7 +38,7 @@ Function Get-WSManHistory {
         $Filter = @{
             "ProviderName"="Microsoft-Windows-WinRM";
             "LogName"="Microsoft-Windows-WinRM/Operational";
-            "Id"=6,10,11,13,15,16,33,162;
+            "Id"=6,10,11,13,16,33,162;
         }
 
         If ($Path) {
@@ -72,11 +72,20 @@ Function Get-WSManHistory {
                     # Setting WSMan Session Option (34) - WSMAN_OPTION_USE_INTEARACTIVE_TOKEN with value (0) completed successfully.
                     # Setting WSMan Session Option (1) - WSMAN_OPTION_DEFAULT_OPERATION_TIMEOUTMS with value (180000) completed successfully.
                     Write-Verbose -Message "Session Option tokens: $($Event.Id)"
-
+                    If (-not $Sessions[$SessionId].SessionOptions) {
+                        $Sessions[$SessionId] | Add-Member -MemberType NoteProperty -Name "SessionOptions" -Value @();
+                    }
+                    $Token = New-Object -TypeName PSObject -Property @{
+                        "Code" = $Record[0].'#text';
+                        "Name" = $Record[1].'#text';
+                        "Value" = $Record[2].'#text';
+                    }
+                    $Sessions[$SessionId].SessionOptions += $Token
                 }
                 11 {
                     # Creating WSMan shell with the ResourceUri: http://schemas.microsoft.com/powershell/UTW and ShellId: EFE06CA1-17D2-40D6-A138-52CE7645116B
                     # command: Enter-PSSession -ComputerName century.underthewire.tech -UseSSL -port 6010 -configurationname UTW -Credential (Get-Credential)
+                    # ShellTypes defined by resource URI: https://msdn.microsoft.com/en-us/library/aa384461(v=vs.85).aspx
                     $ShellTypes = @{
                         "http://schemas.microsoft.com/wbem/wsman/1/wmi" = "wmi";
                         "http://schemas.microsoft.com/wbem/wsman/1/wmi/root/cimv2" = "wmicimv2";
@@ -86,16 +95,13 @@ Function Get-WSManHistory {
                         "http://schemas.microsoft.com/powershell/UTW" = "PowerShell";
                     }
                     Write-Verbose -Message "Resource Shell Creation: $($Event.Id)"
-                    $Uri = $Record[0].'#text';
+                    $Uri = $Record[0].'#text'
                     $Sessions[$SessionId] | Add-Member -MemberType NoteProperty -Name "ShellType" -Value $ShellTypes[$Uri] -Force -ErrorAction Ignore
                 }
                 13 {
                     # Running WSMan command with CommandId: 2D9967F0-3EE4-47AC-90A7-2B91CEB82BC1
                     Write-Verbose -Message "Command Execution: $($Event.Id)"
-                }
-                15 {
-                    # Closing WSMan command
-                    Write-Verbose -Message "Command Closed: $($Event.Id)"
+                    $Sessions[$SessionId] | Add-Member -MemberType NoteProperty -Name "CommandId" -Value $Record.'#text' -Force -ErrorAction Ignore
                 }
                 16 {
                     # Closing WSMan shell
@@ -118,6 +124,7 @@ Function Get-WSManHistory {
                 162 {
                     # Authenticating the user failed. The credentials didn't work.
                     Write-Verbose -Message "User Authentication Failed: $($Event.Id)"
+                    $Sessions[$SessionId] | Add-Member -MemberType NoteProperty -Name "Error" -Value "User Authentication failed" -Force -ErrorAction Ignore
                 }
                 Default {
                     Write-Warning -Message "I can't parse event ID $($Event.Id)"
