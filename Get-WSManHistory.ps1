@@ -38,7 +38,7 @@ Function Get-WSManHistory {
         $Filter = @{
             "ProviderName"="Microsoft-Windows-WinRM";
             "LogName"="Microsoft-Windows-WinRM/Operational";
-            "Id"=6,10,11,13,16,33,162;
+            "Id"=6,10,11,13,33,162;
         }
 
         If ($Path) {
