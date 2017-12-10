@@ -88,16 +88,12 @@ Function Get-WSManHistory {
                     # ShellTypes defined by resource URI: https://msdn.microsoft.com/en-us/library/aa384461(v=vs.85).aspx
                     Write-Verbose -Message "Resource Shell Creation: $($Event.Id)"
                     $Uri = $Record[0].'#text'
-                    $Sessions[$SessionId] | Add-Member -MemberType NoteProperty -Name "ShellType" -Value $Uri -Force -ErrorAction Ignore
+                    $Sessions[$SessionId] | Add-Member -MemberType NoteProperty -Name "ResourceUri" -Value $Uri -Force -ErrorAction Ignore
                 }
                 13 {
                     # Running WSMan command with CommandId: 2D9967F0-3EE4-47AC-90A7-2B91CEB82BC1
                     Write-Verbose -Message "Command Execution: $($Event.Id)"
                     $Sessions[$SessionId] | Add-Member -MemberType NoteProperty -Name "CommandId" -Value $Record.'#text' -Force -ErrorAction Ignore
-                }
-                16 {
-                    # Closing WSMan shell
-                    Write-Verbose -Message "Shell Closed: $($Event.Id)"
                 }
                 33 {
                     # Closing WSMan Session completed successfully
@@ -109,14 +105,13 @@ Function Get-WSManHistory {
                         # WSMan operation CreateShell failed, error code 5
                         Write-Verbose -Message "Session Creation Failed: $($Event.Id)"
                         $Sessions[$SessionId] | Add-Member -MemberType NoteProperty -Name "SessionClosed" -Value $Event.TimeCreated -Force -ErrorAction Ignore
-                        $Operation = "$($Record[0].'#text') operation failed"
-                        $Sessions[$SessionId] | Add-Member -MemberType NoteProperty -Name "Operation" -Value $Operation -Force -ErrorAction Ignore
+                        $Sessions[$SessionId] | Add-Member -MemberType NoteProperty -Name "FailureReason" -Value $Record[1].'#text' -Force -ErrorAction Ignore
                     }
                 }
                 162 {
                     # Authenticating the user failed. The credentials didn't work.
                     Write-Verbose -Message "User Authentication Failed: $($Event.Id)"
-                    $Sessions[$SessionId] | Add-Member -MemberType NoteProperty -Name "Error" -Value "User Authentication failed" -Force -ErrorAction Ignore
+                    $Sessions[$SessionId] | Add-Member -MemberType NoteProperty -Name "FailureReason" -Value "User Authentication failed" -Force -ErrorAction Ignore
                 }
                 Default {
                     Write-Warning -Message "I can't parse event ID $($Event.Id)"
